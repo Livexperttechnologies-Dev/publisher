@@ -1,0 +1,367 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------
+// MULTI-TENANCY & ORG STRUCTURE
+// ----------------------------------------------------
+
+enum BusinessType {
+  BOOK_PUBLISHER
+  BOOK_WHOLESALER
+  BOOK_DISTRIBUTOR
+  BOOK_RETAILER
+  BOOKSTORE
+  EDUCATIONAL_SUPPLIER
+  PRINTING_AND_PUBLISHING
+  INSTITUTIONAL_SUPPLIER
+}
+
+enum InventoryValuationMethod {
+  FIFO
+  WEIGHTED_AVERAGE
+  STANDARD_COST
+}
+
+model Company {
+  id                   String                   @id @default(uuid())
+  name                 String
+  code                 String                   @unique
+  legalName            String?
+  businessType         BusinessType             @default(BOOK_PUBLISHER)
+  taxId                String?                  // GSTIN
+  pan                  String?
+  cin                  String?                  // Corporate Identity Number
+  currency             String                   @default("INR")
+  currencySymbol       String                   @default("₹")
+  decimalPrecision     Int                      @default(2)
+  fiscalYearStart      Int                      @default(4) // April
+  email                String?
+  phone                String?
+  website              String?
+  registeredAddress    String?
+  billingAddress       String?
+  city                 String?
+  state                String?
+  country              String                   @default("India")
+  postalCode           String?
+  logoUrl              String?
+  invoicePrefix        String                   @default("INV")
+  invoiceNumberingRule Json?                    // { format: "PREFIX/YEAR/NUMBER", padding: 4, resetAnnually: true }
+  bankDetails          Json?                    // { accountName, accountNumber, bankName, ifsc, branch, upiId }
+  accountingSettings   Json?                    // { defaultSalesAccountId, defaultPurchaseAccountId, inventoryValuationMethod, defaultReceivableAccountId, defaultPayableAccountId, defaultCashAccountId, defaultBankAccountId, roundOffAccountId, discountAllowedAccountId, discountReceivedAccountId }
+  costCentres          Json?                    // Array of cost centres: [{ id, name, code }]
+  profitCentres        Json?                    // Array of profit centres: [{ id, name, code }]
+  paymentTerms         Json?                    // Array of payment terms: [{ id, name, days }]
+  defaultCreditLimit   Decimal                  @default(500000.00) @db.Decimal(15, 2)
+  isActive             Boolean                  @default(true)
+  isDeleted            Boolean                  @default(false)
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+
+  branches             Branch[]
+  fiscalYears          FiscalYear[]
+  users                User[]
+  accountGroups        AccountGroup[]
+  accountLedgers       AccountLedger[]
+  auditLogs            AuditLog[]
+
+  @@map("companies")
+}
+
+model Branch {
+  id                          String   @id @default(uuid())
+  companyId                   String
+  name                        String
+  code                        String
+  isMain                      Boolean  @default(false)
+  registeredAddress           String?
+  billingAddress              String?
+  city                        String?
+  state                       String?
+  country                     String   @default("India")
+  postalCode                  String?
+  phone                       String?
+  email                       String?
+  gstin                       String?  // Branch-specific State GSTIN
+  branchManagerId             String?
+  branchManagerName           String?
+  invoicePrefix               String?  // Branch-specific invoice prefix, e.g. "DEL-INV"
+  interBranchTransfersEnabled Boolean  @default(true)
+  isActive                    Boolean  @default(true)
+  isDeleted                   Boolean  @default(false)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  company                     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users                       User[]
+
+  @@unique([companyId, code])
+  @@map("branches")
+}
+
+model FiscalYear {
+  id                  String   @id @default(uuid())
+  companyId           String
+  name                String   // e.g. "FY 2026-2027"
+  startDate           DateTime
+  endDate             DateTime
+  accountingStartDate DateTime @default(now())
+  isClosed            Boolean  @default(false)
+  isCurrent           Boolean  @default(false)
+  lockedPeriods       Json?    // Array of locked month intervals: [{ month: 4, year: 2026, isLocked: true }]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  journalEntries      JournalEntry[]
+
+  @@unique([companyId, name])
+  @@map("fiscal_years")
+}
+
+// ----------------------------------------------------
+// RBAC, SESSIONS & USERS
+// ----------------------------------------------------
+
+enum RoleType {
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  FINANCE_MANAGER
+  ACCOUNTANT
+  PURCHASE_MANAGER
+  SALES_MANAGER
+  INVENTORY_MANAGER
+  WAREHOUSE_MANAGER
+  PUBLISHER
+  ROYALTY_MANAGER
+  DISTRIBUTOR_MANAGER
+  CASHIER
+  AUDITOR
+  VIEWER
+}
+
+enum DataScope {
+  ALL_COMPANIES
+  COMPANY
+  BRANCH
+  WAREHOUSE
+  OWN
+}
+
+model Role {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  roleType    RoleType  @default(ACCOUNTANT)
+  description String?
+  dataScope   DataScope @default(BRANCH)
+  permissions Json
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  users       User[]
+
+  @@map("roles")
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  companyId            String?
+  branchId             String?
+  roleId               String
+  email                String    @unique
+  username             String    @unique
+  passwordHash         String
+  fullName             String
+  phone                String?
+  avatarUrl            String?
+  department           String?
+  assignedWarehouses   Json?
+  isActive             Boolean   @default(true)
+  isDeleted            Boolean   @default(false)
+  failedLoginAttempts  Int       @default(0)
+  lockoutUntil         DateTime?
+  twoFactorEnabled     Boolean   @default(false)
+  twoFactorSecret      String?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  lastLoginAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  company              Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  branch               Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  role                 Role      @relation(fields: [roleId], references: [id])
+  sessions             Session[]
+  auditLogs            AuditLog[]
+
+  @@index([companyId, branchId])
+  @@map("users")
+}
+
+model Session {
+  id           String    @id @default(uuid())
+  userId       String
+  refreshToken String    @unique
+  ipAddress    String?
+  userAgent    String?
+  isRevoked    Boolean   @default(false)
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRevoked])
+  @@map("sessions")
+}
+
+// ----------------------------------------------------
+// CHART OF ACCOUNTS & FINANCIAL LEDGER
+// ----------------------------------------------------
+
+enum AccountClassification {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+model AccountGroup {
+  id             String                @id @default(uuid())
+  companyId      String
+  parentGroupId  String?
+  name           String
+  code           String
+  classification AccountClassification
+  isSystemGroup  Boolean               @default(false)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  company        Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parentGroup    AccountGroup?         @relation("SubGroups", fields: [parentGroupId], references: [id])
+  subGroups      AccountGroup[]        @relation("SubGroups")
+  ledgers        AccountLedger[]
+
+  @@unique([companyId, code])
+  @@map("account_groups")
+}
+
+model AccountLedger {
+  id                       String         @id @default(uuid())
+  companyId                String
+  groupId                  String
+  name                     String
+  code                     String
+  openingBalance           Decimal        @default(0.00) @db.Decimal(15, 2)
+  currentBalance           Decimal        @default(0.00) @db.Decimal(15, 2)
+  isDebitBalance           Boolean        @default(true)
+  isBankOrCash             Boolean        @default(false)
+  bankAccountNumber        String?
+  bankName                 String?
+  ifscCode                 String?
+  taxRegistration          String?
+  isReconciliationRequired Boolean        @default(false)
+  isActive                 Boolean        @default(true)
+  isDeleted                Boolean        @default(false)
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+
+  company                  Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  group                    AccountGroup   @relation(fields: [groupId], references: [id])
+  journalItems             JournalEntryItem[]
+
+  @@unique([companyId, code])
+  @@index([companyId, groupId])
+  @@map("account_ledgers")
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+  CANCELLED
+  REVERSED
+}
+
+enum VoucherType {
+  JOURNAL
+  SALES_INVOICE
+  PURCHASE_BILL
+  PAYMENT_VOUCHER
+  RECEIPT_VOUCHER
+  CREDIT_NOTE
+  DEBIT_NOTE
+  CONTRA_VOUCHER
+  ROYALTY_ACCRUAL
+}
+
+model JournalEntry {
+  id             String             @id @default(uuid())
+  fiscalYearId   String
+  voucherNumber  String
+  voucherType    VoucherType        @default(JOURNAL)
+  entryDate      DateTime
+  postingDate    DateTime           @default(now())
+  narration      String
+  status         JournalEntryStatus @default(DRAFT)
+  totalAmount    Decimal            @db.Decimal(15, 2)
+  isReversal     Boolean            @default(false)
+  reversedFromId String?
+  sourceRefId    String?
+  createdById    String
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  fiscalYear     FiscalYear         @relation(fields: [fiscalYearId], references: [id])
+  items          JournalEntryItem[]
+
+  @@unique([fiscalYearId, voucherNumber])
+  @@index([voucherType, entryDate])
+  @@map("journal_entries")
+}
+
+model JournalEntryItem {
+  id             String        @id @default(uuid())
+  journalEntryId String
+  ledgerId       String
+  debitAmount    Decimal       @default(0.00) @db.Decimal(15, 2)
+  creditAmount   Decimal       @default(0.00) @db.Decimal(15, 2)
+  description    String?
+
+  journalEntry   JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  ledger         AccountLedger @relation(fields: [ledgerId], references: [id])
+
+  @@index([ledgerId])
+  @@map("journal_entry_items")
+}
+
+// ----------------------------------------------------
+// AUDIT TRAILS & ACTIVITY LOGS
+// ----------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  companyId  String?
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  company    Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, action])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}

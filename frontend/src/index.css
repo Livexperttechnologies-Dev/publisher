@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #690BA8;
+  --brand-primary-light: rgba(105, 11, 168, 0.08);
+  --brand-primary-ring: rgba(105, 11, 168, 0.3);
+  --brand-deep: #340771;
+  --brand-accent: #E91E63;
+  --brand-accent-light: rgba(233, 30, 99, 0.08);
+  --brand-coral: #F06A64;
+  --brand-coral-light: rgba(240, 106, 100, 0.08);
+}
+
+@layer base {
+  body {
+    @apply bg-[#F8FAFC] text-slate-800 text-sm antialiased;
+  }
+}
+
+/* Custom scrollbars for enterprise data tables and navigations */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dynamic Brand Utility Helpers */
+.bg-brand-primary {
+  background-color: var(--brand-primary, #690BA8) !important;
+}
+
+.text-brand-primary {
+  color: var(--brand-primary, #690BA8) !important;
+}
+
+.border-brand-primary {
+  border-color: var(--brand-primary, #690BA8) !important;
+}
+
+.bg-brand-primary-light {
+  background-color: var(--brand-primary-light, rgba(105, 11, 168, 0.08)) !important;
+}
+
+.bg-brand-deep {
+  background-color: var(--brand-deep, #340771) !important;
+}
+
+.text-brand-deep {
+  color: var(--brand-deep, #340771) !important;
+}
+
+.bg-brand-accent {
+  background-color: var(--brand-accent, #E91E63) !important;
+}
+
+.text-brand-accent {
+  color: var(--brand-accent, #E91E63) !important;
+}
+
+.bg-brand-coral {
+  background-color: var(--brand-coral, #F06A64) !important;
+}
+
+.text-brand-coral {
+  color: var(--brand-coral, #F06A64) !important;
+}

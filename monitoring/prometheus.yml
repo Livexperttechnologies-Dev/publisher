@@ -1,0 +1,34 @@
+# ==============================================================================
+# KIBO360 ENTERPRISE ERP - PROMETHEUS METRICS SCRAPING SPECIFICATION
+# ==============================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # KIBO360 Node.js Backend API
+  - job_name: 'kibo360-backend-api'
+    metrics_path: '/api/v1/health'
+    static_configs:
+      - targets: ['backend:5000']
+    relabel_configs:
+      - target_label: application
+        replacement: 'kibo360-erp'
+      - target_label: environment
+        replacement: 'production'
+
+  # PostgreSQL Database Exporter
+  - job_name: 'kibo360-postgresql'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # Redis In-Memory Cache Exporter
+  - job_name: 'kibo360-redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # Nginx Reverse Proxy Exporter
+  - job_name: 'kibo360-nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']

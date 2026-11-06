@@ -1,0 +1,51 @@
+import { Router } from 'express';
+import { healthRoutes } from '../modules/health/healthRoutes';
+import { authRoutes } from '../modules/auth/auth.routes';
+import { usersRoutes } from '../modules/users/users.routes';
+import { companiesRoutes } from '../modules/companies/companies.routes';
+import { accountingRoutes } from '../modules/accounting/accounting.routes';
+import { booksRoutes } from '../modules/books/books.routes';
+import { inventoryRoutes } from '../modules/inventory/inventory.routes';
+import { purchasesRoutes } from '../modules/purchases/purchases.routes';
+import { salesRoutes } from '../modules/sales/sales.routes';
+import { customersRoutes } from '../modules/customers/customers.routes';
+import { suppliersRoutes } from '../modules/suppliers/suppliers.routes';
+import { publishingRoutes } from '../modules/publishing/publishing.routes';
+import { royaltiesRoutes } from '../modules/royalties/royalties.routes';
+import { distributorsRoutes } from '../modules/distributors/distributors.routes';
+import { taxationRoutes } from '../modules/taxation/taxation.routes';
+import { bankingRoutes } from '../modules/banking/banking.routes';
+import { expensesRoutes } from '../modules/expenses/expenses.routes';
+import { returnsRoutes } from '../modules/returns/returns.routes';
+import { reportsRoutes } from '../modules/reports/reports.routes';
+import { notificationsRoutes } from '../modules/notifications/notifications.routes';
+import { auditRoutes } from '../modules/audit/audit.routes';
+import { rolesRoutes } from '../modules/companies/roles.routes';
+
+const router = Router();
+
+// Version 1 API Routes
+router.use('/health', healthRoutes);
+router.use('/auth', authRoutes);
+router.use('/users', usersRoutes);
+router.use('/roles', rolesRoutes);
+router.use('/companies', companiesRoutes);
+router.use('/accounting', accountingRoutes);
+router.use('/books', booksRoutes);
+router.use('/inventory', inventoryRoutes);
+router.use('/purchases', purchasesRoutes);
+router.use('/sales', salesRoutes);
+router.use('/customers', customersRoutes);
+router.use('/suppliers', suppliersRoutes);
+router.use('/publishing', publishingRoutes);
+router.use('/royalties', royaltiesRoutes);
+router.use('/distributors', distributorsRoutes);
+router.use('/taxation', taxationRoutes);
+router.use('/banking', bankingRoutes);
+router.use('/expenses', expensesRoutes);
+router.use('/returns', returnsRoutes);
+router.use('/reports', reportsRoutes);
+router.use('/notifications', notificationsRoutes);
+router.use('/audit', auditRoutes);
+
+export const apiV1Routes = router;

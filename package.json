@@ -1,0 +1,32 @@
+{
+  "name": "kibo360-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KIBO360 – Financial Accounting for Publishers & Book Sellers Management System",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "test:backend": "cd backend && npm run test",
+    "test:frontend": "cd frontend && npm run test",
+    "test": "npm run test:backend && npm run test:frontend",
+    "db:generate": "cd backend && npx prisma generate",
+    "db:test": "cd database && node test-connection.js"
+  },
+  "keywords": [
+    "kibo360",
+    "erp",
+    "accounting",
+    "publishing",
+    "booksellers",
+    "finance"
+  ],
+  "author": "KIBO360 Enterprise Architecture Team",
+  "license": "PROPRIETARY"
+}

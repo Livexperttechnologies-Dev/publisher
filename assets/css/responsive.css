@@ -1,0 +1,562 @@
+/* ==========================================================================
+   KIBO360 - Responsive Stylesheet
+   Breakpoints: 320px, 375px, 480px, 520px, 760px, 860px, 900px, 1000px, 1100px
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior:smooth
+  }
+}
+
+
+@media (max-width: 760px) {
+  section {
+    padding:34px 0
+  }
+  section.tight {
+    padding:24px 0
+  }
+}
+
+
+@media (max-width: 480px) {
+  .logo-img {
+    height:38px
+  }
+}
+
+
+@media (max-width: 900px) {
+  .nav-toggle {
+    display:block
+  }
+  .nav-links {
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    flex-direction:column;
+    align-items:stretch;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    box-shadow:var(--shadow-lg);
+    padding:18px 6vw 26px;
+    gap:14px;
+    display:none
+  }
+  .nav-links.open {
+    display:flex
+  }
+  .nav-dropdown {
+    display:none
+  }
+  .nav-mobile-products {
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    padding-left:14px;
+    border-left:3px solid var(--line)
+  }
+}
+
+
+@media (max-width: 760px) {
+  .hero {
+    padding:28px 0 44px
+  }
+}
+
+
+@media (max-width: 900px) {
+  .hero-inner {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (hover: hover) {
+  .orbit:hover .orbit-rotator,.orbit:hover .orbit-ring {
+    animation-play-state:paused
+  }
+  .orbit:hover .orbit-chip {
+    animation-play-state:running,paused
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-rotator,.orbit-chip,.orbit-ring,.orbit-center {
+    animation:none!important
+  }
+  .orbit-chip {
+    opacity:1;
+    scale:1
+  }
+}
+
+
+@media (max-width: 520px) {
+  .orbit {
+    display:none
+  }
+  .orbit-fallback {
+    position:static!important;
+    width:auto!important;
+    height:auto!important;
+    clip-path:none!important;
+    overflow:visible!important;
+    display:flex
+  }
+}
+
+
+@media (max-width: 1000px) {
+  .grid-4,.grid-5,.grid-6 {
+    grid-template-columns:repeat(3,1fr)
+  }
+}
+
+
+@media (max-width: 760px) {
+  .grid-3,.grid-4,.grid-5,.grid-6 {
+    grid-template-columns:repeat(2,1fr)
+  }
+  .grid-2 {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (max-width: 480px) {
+  .grid-3,.grid-4,.grid-5,.grid-6 {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (max-width: 560px) {
+  .chip-row {
+    gap:8px
+  }
+  .chip {
+    padding:7px 12px;
+    font-size:.79rem;
+    gap:6px
+  }
+  .chip .lx-icon {
+    width:13px;
+    height:13px
+  }
+}
+
+
+@media (max-width: 1000px) {
+  .problem-panel {
+    grid-template-columns:1fr;
+    padding:24px 20px
+  }
+}
+
+
+@media (max-width: 560px) {
+  .problem-grid {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .meter-fill {
+    animation:none
+  }
+}
+
+
+@media (max-width: 860px) {
+  .chapter-grid {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (max-width: 1100px) {
+  .modules-layout {
+    grid-template-columns:1fr
+  }
+  .module-rail {
+    position:sticky;
+    top:78px;
+    z-index:30;
+    flex-direction:row;
+    align-items:center;
+    gap:6px;
+    max-height:none;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:10px;
+    border-radius:14px;
+    margin-bottom:20px;
+    -webkit-overflow-scrolling:touch
+  }
+  .rail-title {
+    display:none
+  }
+  .rail-item {
+    flex:none;
+    border-left:none;
+    border-bottom:3px solid transparent;
+    border-radius:8px 8px 0 0;
+    padding:7px 10px;
+    white-space:nowrap
+  }
+  .rail-item.active {
+    border-bottom-color:var(--primary);
+    background:#6c22d60f
+  }
+  .rail-cta {
+    display:none
+  }
+  .modules-flow .module-chapter {
+    top:148px
+  }
+}
+
+
+@media (max-width: 760px) {
+  .module-chapter {
+    padding:26px 20px
+  }
+  .stat-strip {
+    grid-template-columns:repeat(2,1fr)
+  }
+  .stat-strip>div:nth-child(odd) {
+    border-left:none
+  }
+  .stat-strip>div:nth-child(n+3) {
+    border-top:1px solid var(--line)
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-dash {
+    animation:none
+  }
+}
+
+
+@media (max-width: 1000px) {
+  .split {
+    grid-template-columns:1fr;
+    gap:44px
+  }
+  .split.reverse .split-visual {
+    order:0
+  }
+}
+
+
+@media (max-width: 1000px) {
+  .img-overlay,.img-overlay.right {
+    position:relative;
+    width:100%;
+    left:0;
+    right:0;
+    bottom:0;
+    margin-top:18px
+  }
+}
+
+
+@media (max-width: 1000px) {
+  .tabs-nav {
+    grid-template-columns:repeat(2,1fr)
+  }
+}
+
+
+@media (max-width: 560px) {
+  .tabs-nav {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (max-width: 760px) {
+  .tabs-container {
+    padding:24px
+  }
+}
+
+
+@media (max-width: 760px) {
+  .security-card {
+    padding:32px
+  }
+}
+
+
+@media (max-width: 1000px) {
+  .certs-grid {
+    grid-template-columns:repeat(2,1fr)
+  }
+}
+
+
+@media (max-width: 560px) {
+  .certs-grid {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (max-width: 760px) {
+  .cta-banner {
+    padding:10px 0 40px
+  }
+  .cta-card {
+    padding:26px 22px;
+    border-radius:22px
+  }
+  .cta-mark {
+    width:170px;
+    right:-50px;
+    bottom:-60px
+  }
+}
+
+
+@media (max-width: 900px) {
+  .footer-grid {
+    grid-template-columns:repeat(2,1fr)
+  }
+}
+
+
+@media (max-width: 560px) {
+  .footer-grid {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (max-width: 900px) {
+  .contact-layout {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-card {
+    animation:none
+  }
+}
+
+
+@media (max-width: 560px) {
+  .modal-card {
+    padding:22px 18px 20px;
+    border-radius:18px
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .chatbot-panel {
+    animation:none
+  }
+}
+
+
+@media (max-width: 560px) {
+  .float-btn {
+    width:48px;
+    height:48px;
+    bottom:18px
+  }
+  .float-wa {
+    left:14px
+  }
+  .float-bot {
+    right:14px
+  }
+  .back-to-top {
+    bottom:80px;
+    right:20px
+  }
+  .chatbot-panel {
+    right:12px;
+    bottom:78px
+  }
+}
+
+
+@media (max-width: 480px) {
+  .admin-top {
+    gap:8px 10px
+  }
+  .admin-title {
+    font-size:.9rem
+  }
+}
+
+
+@media (max-width: 640px) {
+  .admin-grid-2 {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (max-width: 760px) {
+  .admin-faq-row {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-section {
+    opacity:1;
+    transform:none;
+    transition:none
+  }
+}
+
+
+@media (max-width: 760px) {
+  .test-grid {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (min-width: 1001px) {
+  .sec-group:after {
+    content:"";
+    position:absolute;
+    top:50%;
+    width:30px;
+    border-top:2px dashed rgba(108,34,214,.3)
+  }
+  .security-hub-col.left .sec-group:after {
+    right:-30px
+  }
+  .security-hub-col.right .sec-group:after {
+    left:-30px
+  }
+}
+
+
+@media (max-width: 1000px) {
+  .security-hub {
+    grid-template-columns:1fr 1fr
+  }
+  .security-core {
+    grid-column:1 / -1;
+    order:-1;
+    margin-bottom:6px
+  }
+}
+
+
+@media (max-width: 640px) {
+  .security-hub {
+    grid-template-columns:1fr
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .core-ring {
+    animation:none;
+    opacity:.3
+  }
+  .core-ring.r2 {
+    transform:scale(1.35)
+  }
+  .core-ring.r3 {
+    transform:scale(1.7)
+  }
+}
+
+
+@media (max-width: 900px) {
+  .trust-bar {
+    grid-template-columns:repeat(2,1fr)
+  }
+}
+
+
+@media (max-width: 560px) {
+  .trust-bar {
+    grid-template-columns:1fr;
+    padding:20px
+  }
+}
+
+
+@media (max-width: 480px) {
+  .sector-photos {
+    grid-template-columns:repeat(2,1fr)!important
+  }
+  .sector-photos .sector-photo:last-child {
+    grid-column:1 / -1;
+    aspect-ratio:16 / 9
+  }
+}
+
+
+@media (hover: hover) {
+  .marquee:hover .marquee-track {
+    animation-play-state:paused
+  }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    -webkit-mask-image:none;
+    mask-image:none;
+    padding-left:4%;
+    padding-right:4%
+  }
+  .marquee-track {
+    animation:none;
+    width:auto;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px
+  }
+  .marquee-track .chip {
+    margin-right:0
+  }
+  .marquee-track .chip[aria-hidden=true],.marquee-pause {
+    display:none
+  }
+  .tab-panel {
+    animation:none
+  }
+  .sector-photo img {
+    transition:none
+  }
+  .sector-photo:hover img {
+    transform:none
+  }
+}
+
+
+@media (max-width: 860px) {
+  .admin-chat-layout {
+    grid-template-columns:1fr
+  }
+}

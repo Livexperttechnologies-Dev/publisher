@@ -1,0 +1,2768 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------
+// MULTI-TENANCY & ORG STRUCTURE
+// ----------------------------------------------------
+
+enum BusinessType {
+  BOOK_PUBLISHER
+  BOOK_WHOLESALER
+  BOOK_DISTRIBUTOR
+  BOOK_RETAILER
+  BOOKSTORE
+  EDUCATIONAL_SUPPLIER
+  PRINTING_AND_PUBLISHING
+  INSTITUTIONAL_SUPPLIER
+}
+
+enum InventoryValuationMethod {
+  FIFO
+  WEIGHTED_AVERAGE
+  STANDARD_COST
+}
+
+model Company {
+  id                   String                   @id @default(uuid())
+  name                 String
+  code                 String                   @unique
+  legalName            String?
+  businessType         BusinessType             @default(BOOK_PUBLISHER)
+  taxId                String?                  // GSTIN
+  pan                  String?
+  cin                  String?                  // Corporate Identity Number
+  currency             String                   @default("INR")
+  currencySymbol       String                   @default("₹")
+  decimalPrecision     Int                      @default(2)
+  fiscalYearStart      Int                      @default(4) // April
+  email                String?
+  phone                String?
+  website              String?
+  registeredAddress    String?
+  billingAddress       String?
+  city                 String?
+  state                String?
+  country              String                   @default("India")
+  postalCode           String?
+  logoUrl              String?
+  invoicePrefix        String                   @default("INV")
+  invoiceNumberingRule Json?                    // { format: "PREFIX/YEAR/NUMBER", padding: 4, resetAnnually: true }
+  bankDetails          Json?                    // { accountName, accountNumber, bankName, ifsc, branch, upiId }
+  accountingSettings   Json?                    // { defaultSalesAccountId, defaultPurchaseAccountId, inventoryValuationMethod, defaultReceivableAccountId, defaultPayableAccountId, defaultCashAccountId, defaultBankAccountId, roundOffAccountId, discountAllowedAccountId, discountReceivedAccountId }
+  costCentres          Json?                    // Array of cost centres: [{ id, name, code }]
+  profitCentres        Json?                    // Array of profit centres: [{ id, name, code }]
+  paymentTerms         Json?                    // Array of payment terms: [{ id, name, days }]
+  defaultCreditLimit   Decimal                  @default(500000.00) @db.Decimal(15, 2)
+  isActive             Boolean                  @default(true)
+  isDeleted            Boolean                  @default(false)
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+
+  branches             Branch[]
+  fiscalYears          FiscalYear[]
+  users                User[]
+  accountGroups        AccountGroup[]
+  accountLedgers       AccountLedger[]
+  auditLogs            AuditLog[]
+  books                Book[]
+  authors              Author[]
+  publishers           PublisherMaster[]
+  masterTaxonomies     MasterTaxonomy[]
+  parties              PartyMaster[]
+  purchaseRequisitions PurchaseRequisition[]
+  supplierQuotations   SupplierQuotation[]
+  purchaseOrders       PurchaseOrder[]
+  goodsReceiptNotes    GoodsReceiptNote[]
+  purchaseInvoices     PurchaseInvoice[]
+  purchaseReturns      PurchaseReturn[]
+  supplierPayments     SupplierPayment[]
+  salesQuotations      SalesQuotation[]
+  salesOrders          SalesOrder[]
+  deliveryChallans     DeliveryChallan[]
+  salesInvoices        SalesInvoice[]
+  salesReturns         SalesReturn[]
+  customerReceipts     CustomerReceipt[]
+  posShifts            PosShift[]
+  warehouses           Warehouse[]
+  warehouseStocks      WarehouseStock[]
+  stockMovements       StockMovement[]
+  stockTransfers       StockTransfer[]
+  stockAdjustments     StockAdjustment[]
+  stockAuditSessions   StockAuditSession[]
+  publishingProjects   PublishingProject[]
+  productionOrders     ProductionOrder[]
+  vendorJobOrders      VendorJobOrder[]
+  authorAgreements     AuthorAgreement[]
+  royaltyAccrualPeriods RoyaltyAccrualPeriod[]
+  royaltyCalculations  RoyaltyCalculation[]
+  royaltySettlements   RoyaltyPaymentSettlement[]
+  distributors         Distributor[]
+  dealers              Dealer[]
+  distributionOrders   DistributionOrder[]
+  distributionDispatches DistributionDispatch[]
+  consignmentIssues    ConsignmentIssue[]
+  commissionSettlements DistributionCommissionSettlement[]
+  gstRateConfigs       GstRateConfig[]
+  taxInvoiceRecords    TaxInvoiceRecord[]
+  tdsConfigurations    TdsConfiguration[]
+  tdsDeductionRecords  TdsDeductionRecord[]
+  eWayBillRecords      EWayBillRecord[]
+  taxAuditLogs         TaxAuditLog[]
+  taxApiLogs           TaxApiIntegrationLog[]
+  bankAccounts         BankAccount[]
+  cashRegisters        CashRegister[]
+  bankTransactions     BankTransactionRecord[]
+  cashTransactions     CashTransactionRecord[]
+  chequeLeaves         ChequeLeaf[]
+  cashClosings         CashClosingSession[]
+  bankReconciliations  BankReconciliationRecord[]
+  expenseCategories     ExpenseCategory[]
+  expenseVouchers       ExpenseVoucher[]
+  employeeReimbursements EmployeeReimbursement[]
+  recurringExpenses     RecurringExpense[]
+  fixedAssets           FixedAsset[]
+  depreciationSchedules AssetDepreciationSchedule[]
+  assetDisposals        AssetDisposalRecord[]
+  budgetPlans           BudgetPlan[]
+  distributorReturns    DistributorReturnRecord[]
+  financialAdjustments  FinancialAdjustmentRecord[]
+  refundRecords         RefundRecord[]
+
+  @@map("companies")
+}
+
+model Branch {
+  id                          String   @id @default(uuid())
+  companyId                   String
+  name                        String
+  code                        String
+  isMain                      Boolean  @default(false)
+  registeredAddress           String?
+  billingAddress              String?
+  city                        String?
+  state                       String?
+  country                     String   @default("India")
+  postalCode                  String?
+  phone                       String?
+  email                       String?
+  gstin                       String?  // Branch-specific State GSTIN
+  branchManagerId             String?
+  branchManagerName           String?
+  invoicePrefix               String?  // Branch-specific invoice prefix, e.g. "DEL-INV"
+  interBranchTransfersEnabled Boolean  @default(true)
+  isActive                    Boolean  @default(true)
+  isDeleted                   Boolean  @default(false)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  company                     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users                       User[]
+
+  @@unique([companyId, code])
+  @@map("branches")
+}
+
+model FiscalYear {
+  id                  String   @id @default(uuid())
+  companyId           String
+  name                String   // e.g. "FY 2026-2027"
+  startDate           DateTime
+  endDate             DateTime
+  accountingStartDate DateTime @default(now())
+  isClosed            Boolean  @default(false)
+  isCurrent           Boolean  @default(false)
+  lockedPeriods       Json?    // Array of locked month intervals: [{ month: 4, year: 2026, isLocked: true }]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  journalEntries      JournalEntry[]
+
+  @@unique([companyId, name])
+  @@map("fiscal_years")
+}
+
+// ----------------------------------------------------
+// RBAC, SESSIONS & USERS
+// ----------------------------------------------------
+
+enum RoleType {
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  FINANCE_MANAGER
+  ACCOUNTANT
+  PURCHASE_MANAGER
+  SALES_MANAGER
+  INVENTORY_MANAGER
+  WAREHOUSE_MANAGER
+  PUBLISHER
+  ROYALTY_MANAGER
+  DISTRIBUTOR_MANAGER
+  CASHIER
+  AUDITOR
+  VIEWER
+}
+
+enum DataScope {
+  ALL_COMPANIES
+  COMPANY
+  BRANCH
+  WAREHOUSE
+  OWN
+}
+
+model Role {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  roleType    RoleType  @default(ACCOUNTANT)
+  description String?
+  dataScope   DataScope @default(BRANCH)
+  permissions Json      // Granular permissions: { [module]: ["view", "create", "edit", "delete", "approve", "post", "cancel", "export", "print"] }
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  users       User[]
+
+  @@map("roles")
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  companyId            String?
+  branchId             String?
+  roleId               String
+  email                String    @unique
+  username             String    @unique
+  passwordHash         String
+  fullName             String
+  phone                String?
+  avatarUrl            String?
+  department           String?
+  assignedWarehouses   Json?
+  isActive             Boolean   @default(true)
+  isDeleted            Boolean   @default(false)
+  failedLoginAttempts  Int       @default(0)
+  lockoutUntil         DateTime?
+  twoFactorEnabled     Boolean   @default(false)
+  twoFactorSecret      String?
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  lastLoginAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  company              Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  branch               Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  role                 Role      @relation(fields: [roleId], references: [id])
+  sessions             Session[]
+  auditLogs            AuditLog[]
+
+  @@index([companyId, branchId])
+  @@map("users")
+}
+
+model Session {
+  id           String    @id @default(uuid())
+  userId       String
+  refreshToken String    @unique
+  ipAddress    String?
+  userAgent    String?
+  isRevoked    Boolean   @default(false)
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRevoked])
+  @@map("sessions")
+}
+
+// ----------------------------------------------------
+// CHART OF ACCOUNTS & FINANCIAL LEDGER
+// ----------------------------------------------------
+
+enum AccountClassification {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+model AccountGroup {
+  id             String                @id @default(uuid())
+  companyId      String
+  parentGroupId  String?
+  name           String
+  code           String
+  classification AccountClassification
+  isSystemGroup  Boolean               @default(false)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  company        Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parentGroup    AccountGroup?         @relation("SubGroups", fields: [parentGroupId], references: [id])
+  subGroups      AccountGroup[]        @relation("SubGroups")
+  ledgers        AccountLedger[]
+
+  @@unique([companyId, code])
+  @@map("account_groups")
+}
+
+model AccountLedger {
+  id                       String         @id @default(uuid())
+  companyId                String
+  groupId                  String
+  name                     String
+  code                     String
+  openingBalance           Decimal        @default(0.00) @db.Decimal(15, 2)
+  currentBalance           Decimal        @default(0.00) @db.Decimal(15, 2)
+  isDebitBalance           Boolean        @default(true)
+  isBankOrCash             Boolean        @default(false)
+  bankAccountNumber        String?
+  bankName                 String?
+  ifscCode                 String?
+  taxRegistration          String?
+  isReconciliationRequired Boolean        @default(false)
+  isActive                 Boolean        @default(true)
+  isDeleted                Boolean        @default(false)
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+
+  company                  Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  group                    AccountGroup   @relation(fields: [groupId], references: [id])
+  journalItems             JournalEntryItem[]
+
+  @@unique([companyId, code])
+  @@index([companyId, groupId])
+  @@map("account_ledgers")
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+  CANCELLED
+  REVERSED
+}
+
+enum VoucherType {
+  JOURNAL
+  SALES_INVOICE
+  PURCHASE_BILL
+  PAYMENT_VOUCHER
+  RECEIPT_VOUCHER
+  CREDIT_NOTE
+  DEBIT_NOTE
+  CONTRA_VOUCHER
+  ROYALTY_ACCRUAL
+}
+
+model JournalEntry {
+  id             String             @id @default(uuid())
+  companyId      String?
+  branchId       String?
+  branchName     String?
+  fiscalYearId   String
+  voucherNumber  String
+  voucherType    VoucherType        @default(JOURNAL)
+  entryDate      DateTime
+  postingDate    DateTime           @default(now())
+  narration      String
+  status         JournalEntryStatus @default(DRAFT)
+  totalAmount    Decimal            @db.Decimal(15, 2)
+  isReversal     Boolean            @default(false)
+  reversedFromId String?
+  sourceRefId    String?
+  createdById    String
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  fiscalYear     FiscalYear         @relation(fields: [fiscalYearId], references: [id])
+  items          JournalEntryItem[]
+
+  @@unique([fiscalYearId, voucherNumber])
+  @@index([voucherType, entryDate])
+  @@index([companyId, branchId])
+  @@map("journal_entries")
+}
+
+model JournalEntryItem {
+  id             String        @id @default(uuid())
+  journalEntryId String
+  ledgerId       String
+  costCentreId   String?
+  costCentreName String?
+  branchId       String?
+  debitAmount    Decimal       @default(0.00) @db.Decimal(15, 2)
+  creditAmount   Decimal       @default(0.00) @db.Decimal(15, 2)
+  description    String?
+
+  journalEntry   JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  ledger         AccountLedger @relation(fields: [ledgerId], references: [id])
+
+  @@index([ledgerId])
+  @@index([costCentreId])
+  @@map("journal_entry_items")
+}
+
+// ----------------------------------------------------
+// AUDIT TRAILS & ACTIVITY LOGS
+// ----------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  companyId  String?
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  company    Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, action])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
+
+// ----------------------------------------------------
+// PHASE 04: MASTER DATA & BOOK CATALOGUE
+// ----------------------------------------------------
+
+enum BookStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_PRINT
+  DISCONTINUED
+}
+
+model Book {
+  id              String      @id @default(uuid())
+  companyId       String
+  parentTitleId   String?     // For linking multiple editions, formats, languages of the same title
+  title           String
+  subtitle        String?
+  isbn10          String?
+  isbn13          String?
+  sku             String      // Internal code / SKU
+  barcode         String?
+  authorId        String?
+  authorName      String
+  coAuthors       Json?       // String array or object array of co-authors
+  publisherId     String?
+  publisherName   String
+  edition         String      @default("1st Edition")
+  volume          String?
+  language        String      @default("English")
+  subject         String
+  category        String
+  subcategory     String?
+  publicationDate DateTime?
+  publicationYear Int         @default(2026)
+  numberOfPages   Int         @default(0)
+  bindingType     String      @default("Paperback")
+  bookSize        String      @default("Royal 8vo")
+  printingFormat  String      @default("1 Color")
+  hsnSacCode      String      @default("4901")
+  taxRate         Decimal     @default(0.00) @db.Decimal(5, 2)
+  mrp             Decimal     @db.Decimal(15, 2)
+  wholesalePrice  Decimal     @db.Decimal(15, 2)
+  dealerPrice     Decimal     @db.Decimal(15, 2)
+  purchaseCost    Decimal     @db.Decimal(15, 2)
+  openingStock    Decimal     @default(0.00) @db.Decimal(15, 2)
+  reorderLevel    Int         @default(50)
+  warehouseId     String?
+  rackShelf       String?
+  productImage    String?
+  description     String?
+  status          BookStatus  @default(ACTIVE)
+  isActive        Boolean     @default(true)
+  isDeleted       Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  author          Author?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  publisher       PublisherMaster? @relation(fields: [publisherId], references: [id], onDelete: SetNull)
+
+  @@unique([companyId, sku])
+  @@index([companyId, isbn13])
+  @@index([companyId, title])
+  @@index([parentTitleId])
+  @@map("books")
+}
+
+model Author {
+  id                     String    @id @default(uuid())
+  companyId              String
+  name                   String
+  pseudonym              String?
+  bio                    String?
+  email                  String?
+  phone                  String?
+  address                String?
+  city                   String?
+  state                  String?
+  country                String    @default("India")
+  pan                    String?   // 10 chars for TDS compliance
+  bankDetails            Json?     // { accountName, accountNumber, bankName, ifsc, branch }
+  royaltyAgreementNumber String?
+  royaltyStartDate       DateTime?
+  royaltyEndDate         DateTime?
+  royaltyType            String    @default("PERCENTAGE_ON_MRP") // PERCENTAGE_ON_MRP, PERCENTAGE_ON_NET_SALES, FIXED_PER_COPY
+  royaltyRate            Decimal   @default(10.00) @db.Decimal(5, 2)
+  paymentTerms           String    @default("Annual")
+  isActive               Boolean   @default(true)
+  isDeleted              Boolean   @default(false)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  company                Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  books                  Book[]
+
+  @@unique([companyId, name])
+  @@map("authors")
+}
+
+model PublisherMaster {
+  id            String    @id @default(uuid())
+  companyId     String
+  name          String
+  code          String
+  contactPerson String?
+  email         String?
+  phone         String?
+  website       String?
+  gstin         String?
+  pan           String?
+  address       String?
+  city          String?
+  state         String?
+  country       String    @default("India")
+  paymentTerms  String    @default("Net 60")
+  isActive      Boolean   @default(true)
+  isDeleted     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  books         Book[]
+
+  @@unique([companyId, code])
+  @@map("publishers")
+}
+
+model MasterTaxonomy {
+  id          String   @id @default(uuid())
+  companyId   String
+  type        String   // CATEGORY, SUBJECT, LANGUAGE, BINDING_TYPE, PAPER_TYPE, PRINTING_VENDOR, BINDING_VENDOR, WAREHOUSE, RACK_SHELF, UOM, TAX_CODE, HSN_CODE, PRICE_LIST, DISCOUNT_SCHEME
+  code        String
+  name        String
+  description String?
+  metadata    Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, type, code])
+  @@index([companyId, type])
+  @@map("master_taxonomies")
+}
+
+model PartyMaster {
+  id                 String   @id @default(uuid())
+  companyId          String
+  partyType          String   // CUSTOMER, SUPPLIER, DEALER, DISTRIBUTOR, INSTITUTION_SCHOOL, TRANSPORTER
+  name               String
+  code               String
+  contactPerson      String?
+  email              String?
+  phone              String?
+  mobile             String?
+  gstin              String?
+  pan                String?
+  billingAddress     String?
+  shippingAddress    String?
+  city               String?
+  state              String?
+  stateCode          String?  // GST State Code (e.g. 07, 27)
+  pincode            String?
+  creditLimit        Decimal  @default(0.00) @db.Decimal(15, 2)
+  creditDays         Int      @default(30)
+  discountRate       Decimal  @default(0.00) @db.Decimal(5, 2)
+  paymentTerms       String   @default("Net 30")
+  bankDetails        Json?
+  transporterDetails Json?
+  isActive           Boolean  @default(true)
+  isDeleted          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, partyType, code])
+  @@index([companyId, partyType])
+  @@map("party_masters")
+}
+
+// ----------------------------------------------------
+// PHASE 06: PURCHASE MANAGEMENT
+// ----------------------------------------------------
+
+enum RequisitionStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  PO_RAISED
+  REJECTED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_RECEIVED
+  COMPLETED
+  CANCELLED
+}
+
+enum GRNStatus {
+  RECEIVED
+  QUALITY_VERIFIED
+  INSPECTED
+  POSTED_TO_INVENTORY
+}
+
+enum PurchaseInvoiceStatus {
+  DRAFT
+  CONFIRMED
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
+
+model PurchaseRequisition {
+  id              String            @id @default(uuid())
+  companyId       String
+  requisitionNo   String
+  department      String            @default("Editorial & Production")
+  requestDate     DateTime          @default(now())
+  requiredDate    DateTime
+  priority        String            @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  requestedBy     String
+  status          RequisitionStatus @default(PENDING_APPROVAL)
+  remarks         String?
+  items           Json              // Array of requisition items: [{ bookId, title, isbn, sku, quantity, estimatedRate, estimatedAmount }]
+  totalEstimated  Decimal           @default(0.00) @db.Decimal(15, 2)
+  approvedBy      String?
+  approvedAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  company         Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, requisitionNo])
+  @@map("purchase_requisitions")
+}
+
+model SupplierQuotation {
+  id              String   @id @default(uuid())
+  companyId       String
+  quotationNo     String
+  supplierId      String
+  supplierName    String
+  requisitionId   String?
+  quotationDate   DateTime @default(now())
+  validUntil      DateTime
+  paymentTerms    String   @default("Net 45")
+  deliveryTerms   String   @default("Ex-Factory")
+  leadTimeDays    Int      @default(14)
+  items           Json     // Array of quotation items: [{ bookId, description, sku, quantity, rate, discountPercent, taxPercent, lineTotal }]
+  subtotal        Decimal  @db.Decimal(15, 2)
+  taxAmount       Decimal  @default(0.00) @db.Decimal(15, 2)
+  additionalCharges Decimal @default(0.00) @db.Decimal(15, 2)
+  grandTotal      Decimal  @db.Decimal(15, 2)
+  status          String   @default("ACTIVE") // ACTIVE, ACCEPTED, REJECTED, EXPIRED
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, quotationNo])
+  @@map("supplier_quotations")
+}
+
+model PurchaseOrder {
+  id                String              @id @default(uuid())
+  companyId         String
+  branchId          String?
+  poNumber          String
+  orderDate         DateTime            @default(now())
+  expectedDelivery  DateTime
+  supplierId        String
+  supplierName      String
+  supplierGstin     String?
+  supplierAddress   String?
+  quotationRef      String?
+  requisitionRef    String?
+  subtotal          Decimal             @db.Decimal(15, 2)
+  discountTotal     Decimal             @default(0.00) @db.Decimal(15, 2)
+  taxTotal          Decimal             @default(0.00) @db.Decimal(15, 2)
+  freightCharges    Decimal             @default(0.00) @db.Decimal(15, 2)
+  additionalCharges Decimal             @default(0.00) @db.Decimal(15, 2)
+  roundOff          Decimal             @default(0.00) @db.Decimal(15, 2)
+  grandTotal        Decimal             @db.Decimal(15, 2)
+  paymentTerms      String              @default("Net 45")
+  deliveryTerms     String?
+  status            PurchaseOrderStatus @default(ISSUED)
+  notes             String?
+  createdById       String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  company           Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items             PurchaseOrderItem[]
+  goodsReceiptNotes GoodsReceiptNote[]
+  purchaseInvoices  PurchaseInvoice[]
+
+  @@unique([companyId, poNumber])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id               String        @id @default(uuid())
+  purchaseOrderId  String
+  bookId           String?
+  bookTitle        String
+  isbn             String?
+  sku              String
+  quantity         Decimal       @db.Decimal(12, 2) // ordered qty
+  receivedQuantity Decimal       @default(0.00) @db.Decimal(12, 2)
+  unitRate         Decimal       @db.Decimal(15, 2)
+  discountPercent  Decimal       @default(0.00) @db.Decimal(5, 2)
+  taxPercent       Decimal       @default(0.00) @db.Decimal(5, 2)
+  cgstRate         Decimal       @default(0.00) @db.Decimal(5, 2)
+  sgstRate         Decimal       @default(0.00) @db.Decimal(5, 2)
+  igstRate         Decimal       @default(0.00) @db.Decimal(5, 2)
+  cgstAmount       Decimal       @default(0.00) @db.Decimal(15, 2)
+  sgstAmount       Decimal       @default(0.00) @db.Decimal(15, 2)
+  igstAmount       Decimal       @default(0.00) @db.Decimal(15, 2)
+  lineTotal        Decimal       @db.Decimal(15, 2)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  @@map("purchase_order_items")
+}
+
+model GoodsReceiptNote {
+  id                String               @id @default(uuid())
+  companyId         String
+  branchId          String?
+  grnNumber         String
+  purchaseOrderId   String
+  poNumber          String
+  supplierId        String
+  supplierName      String
+  receiptDate       DateTime             @default(now())
+  warehouseId       String?
+  warehouseName     String?              @default("Central Godown / Main Depot")
+  deliveryChallanNo String?
+  transporterName   String?
+  lrNumber          String?
+  vehicleNumber     String?
+  status            GRNStatus            @default(POSTED_TO_INVENTORY)
+  notes             String?
+  receivedBy        String?
+  inspectedBy       String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  company           Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  purchaseOrder     PurchaseOrder        @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  items             GoodsReceiptNoteItem[]
+  purchaseInvoices  PurchaseInvoice[]
+
+  @@unique([companyId, grnNumber])
+  @@map("goods_receipt_notes")
+}
+
+model GoodsReceiptNoteItem {
+  id                 String           @id @default(uuid())
+  goodsReceiptNoteId String
+  bookId             String?
+  bookTitle          String
+  isbn               String?
+  sku                String
+  orderedQuantity    Decimal          @db.Decimal(12, 2)
+  receivedQuantity   Decimal          @db.Decimal(12, 2)
+  acceptedQuantity   Decimal          @db.Decimal(12, 2)
+  rejectedQuantity   Decimal          @default(0.00) @db.Decimal(12, 2)
+  damagedQuantity    Decimal          @default(0.00) @db.Decimal(12, 2)
+  pendingQuantity    Decimal          @default(0.00) @db.Decimal(12, 2)
+  warehouseRack      String?
+  batchBarcode       String?
+  rejectionReason    String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  goodsReceiptNote   GoodsReceiptNote @relation(fields: [goodsReceiptNoteId], references: [id], onDelete: Cascade)
+
+  @@map("goods_receipt_note_items")
+}
+
+model PurchaseInvoice {
+  id                  String                @id @default(uuid())
+  companyId           String
+  branchId            String?
+  invoiceNumber       String                // System Purchase Invoice #
+  supplierInvoiceNo   String                // Vendor Bill No (e.g. BILT/INV/9821)
+  invoiceDate         DateTime              @default(now())
+  dueDate             DateTime
+  purchaseOrderId     String?
+  poNumber            String?
+  goodsReceiptNoteId  String?
+  grnNumber           String?
+  supplierId          String
+  supplierName        String
+  supplierGstin       String?
+  supplierStateCode   String?
+  placeOfSupply       String?
+  subtotalTaxable     Decimal               @db.Decimal(15, 2)
+  cgstAmount          Decimal               @default(0.00) @db.Decimal(15, 2)
+  sgstAmount          Decimal               @default(0.00) @db.Decimal(15, 2)
+  igstAmount          Decimal               @default(0.00) @db.Decimal(15, 2)
+  totalTaxAmount      Decimal               @default(0.00) @db.Decimal(15, 2)
+  freightAmount       Decimal               @default(0.00) @db.Decimal(15, 2)
+  roundOff            Decimal               @default(0.00) @db.Decimal(15, 2)
+  netPayable          Decimal               @db.Decimal(15, 2)
+  paidAmount          Decimal               @default(0.00) @db.Decimal(15, 2)
+  balanceDue          Decimal               @db.Decimal(15, 2)
+  status              PurchaseInvoiceStatus @default(CONFIRMED)
+  accountingVoucherId String?               // Linked JournalEntry ID (PURCHASE_BILL)
+  voucherNumber       String?               // e.g. PB/2026/0002
+  threeWayMatched     Boolean               @default(true)
+  paymentTerms        String                @default("Net 45")
+  notes               String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  company             Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  purchaseOrder       PurchaseOrder?        @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  goodsReceiptNote    GoodsReceiptNote?     @relation(fields: [goodsReceiptNoteId], references: [id], onDelete: SetNull)
+  items               PurchaseInvoiceItem[]
+  purchaseReturns     PurchaseReturn[]
+
+  @@unique([companyId, invoiceNumber])
+  @@map("purchase_invoices")
+}
+
+model PurchaseInvoiceItem {
+  id                String          @id @default(uuid())
+  purchaseInvoiceId String
+  bookId            String?
+  description       String
+  sku               String
+  hsnSacCode        String          @default("4901")
+  quantity          Decimal         @db.Decimal(12, 2)
+  unitRate          Decimal         @db.Decimal(15, 2)
+  discountAmount    Decimal         @default(0.00) @db.Decimal(15, 2)
+  taxableAmount     Decimal         @db.Decimal(15, 2)
+  taxRate           Decimal         @default(0.00) @db.Decimal(5, 2)
+  cgstRate          Decimal         @default(0.00) @db.Decimal(5, 2)
+  sgstRate          Decimal         @default(0.00) @db.Decimal(5, 2)
+  igstRate          Decimal         @default(0.00) @db.Decimal(5, 2)
+  cgstAmount        Decimal         @default(0.00) @db.Decimal(15, 2)
+  sgstAmount        Decimal         @default(0.00) @db.Decimal(15, 2)
+  igstAmount        Decimal         @default(0.00) @db.Decimal(15, 2)
+  totalAmount       Decimal         @db.Decimal(15, 2)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
+
+  @@map("purchase_invoice_items")
+}
+
+model PurchaseReturn {
+  id                  String   @id @default(uuid())
+  companyId           String
+  returnNumber        String   // Debit Note No (e.g. DN/2026/0001)
+  purchaseInvoiceId   String
+  invoiceNumber       String
+  supplierInvoiceNo   String?
+  supplierId          String
+  supplierName        String
+  returnDate          DateTime @default(now())
+  returnReason        String   // DEFECTIVE_PRINTING, INCORRECT_EDITION, DAMAGED_GOODS, EXCESS_SHIPMENT
+  taxableAmount       Decimal  @db.Decimal(15, 2)
+  cgstAmount          Decimal  @default(0.00) @db.Decimal(15, 2)
+  sgstAmount          Decimal  @default(0.00) @db.Decimal(15, 2)
+  igstAmount          Decimal  @default(0.00) @db.Decimal(15, 2)
+  totalReturnAmount   Decimal  @db.Decimal(15, 2)
+  accountingVoucherId String?  // Linked JournalEntry ID (DEBIT_NOTE)
+  voucherNumber       String?  // DN/2026/0001
+  items               Json     // Array of returned items: [{ bookId, sku, title, returnedQty, unitRate, taxableAmount, totalAmount }]
+  status              String   @default("CONFIRMED")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  purchaseInvoice     PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, returnNumber])
+  @@map("purchase_returns")
+}
+
+model SupplierPayment {
+  id                  String   @id @default(uuid())
+  companyId           String
+  paymentNumber       String   // Payment Voucher # e.g. PV/2026/0002
+  supplierId          String
+  supplierName        String
+  paymentDate         DateTime @default(now())
+  paymentMode         String   // BANK_TRANSFER_NEFT_RTGS, CHEQUE, CASH, UPI
+  bankLedgerId        String   // e.g. led_bank_hdfc, led_cash
+  bankLedgerName      String
+  referenceNumber     String?  // UTR / Cheque #
+  amount              Decimal  @db.Decimal(15, 2)
+  discountReceived    Decimal  @default(0.00) @db.Decimal(15, 2)
+  tdsDeducted         Decimal  @default(0.00) @db.Decimal(15, 2)
+  invoicesSettled     Json     // [{ invoiceId, invoiceNumber, allocatedAmount }]
+  accountingVoucherId String?  // Linked JournalEntry ID (PAYMENT_VOUCHER)
+  voucherNumber       String?  // PV/2026/0002
+  notes               String?
+  status              String   @default("PAID")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, paymentNumber])
+  @@map("supplier_payments")
+}
+
+// ----------------------------------------------------
+// PHASE 07: SALES & CUSTOMER MANAGEMENT
+// ----------------------------------------------------
+
+enum SalesChannel {
+  RETAIL_COUNTER_POS
+  WHOLESALE
+  DISTRIBUTOR
+  DEALER
+  INSTITUTION_SCHOOL
+  ONLINE_ORDER
+  DIRECT_PUBLISHER
+}
+
+enum SalesOrderStatus {
+  DRAFT
+  CONFIRMED
+  STOCK_RESERVED
+  PARTIALLY_DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum SalesInvoiceStatus {
+  DRAFT
+  POSTED
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
+  BANK_TRANSFER_NEFT_RTGS
+  CHEQUE
+  SPLIT_PAYMENT
+  CUSTOMER_CREDIT
+}
+
+model SalesQuotation {
+  id              String       @id @default(uuid())
+  companyId       String
+  branchId        String?
+  quotationNumber String
+  customerId      String
+  customerName    String
+  salesChannel    SalesChannel @default(WHOLESALE)
+  quotationDate   DateTime     @default(now())
+  validUntil      DateTime
+  paymentTerms    String       @default("Net 30")
+  items           Json         // Array: [{ bookId, title, isbn, sku, mrp, unitRate, discountPercent, taxRate, quantity, lineTotal }]
+  subtotal        Decimal      @db.Decimal(15, 2)
+  discountTotal   Decimal      @default(0.00) @db.Decimal(15, 2)
+  taxTotal        Decimal      @default(0.00) @db.Decimal(15, 2)
+  freightCharges  Decimal      @default(0.00) @db.Decimal(15, 2)
+  grandTotal      Decimal      @db.Decimal(15, 2)
+  status          String       @default("ACTIVE") // ACTIVE, ACCEPTED, CONVERTED_TO_ORDER, EXPIRED
+  remarks         String?
+  createdById     String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  company         Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, quotationNumber])
+  @@map("sales_quotations")
+}
+
+model SalesOrder {
+  id               String           @id @default(uuid())
+  companyId        String
+  branchId         String?
+  orderNumber      String
+  quotationRef     String?
+  customerId       String
+  customerName     String
+  customerGstin    String?
+  customerStateCode String?
+  salesChannel     SalesChannel     @default(WHOLESALE)
+  orderDate        DateTime         @default(now())
+  deliveryDueDate  DateTime
+  paymentTerms     String           @default("Net 30")
+  subtotal         Decimal          @db.Decimal(15, 2)
+  discountTotal    Decimal          @default(0.00) @db.Decimal(15, 2)
+  taxTotal         Decimal          @default(0.00) @db.Decimal(15, 2)
+  freightCharges   Decimal          @default(0.00) @db.Decimal(15, 2)
+  roundOff         Decimal          @default(0.00) @db.Decimal(15, 2)
+  grandTotal       Decimal          @db.Decimal(15, 2)
+  status           SalesOrderStatus @default(CONFIRMED)
+  stockReserved    Boolean          @default(true)
+  notes            String?
+  createdById      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  company          Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  items            SalesOrderItem[]
+  deliveryChallans DeliveryChallan[]
+  salesInvoices    SalesInvoice[]
+
+  @@unique([companyId, orderNumber])
+  @@map("sales_orders")
+}
+
+model SalesOrderItem {
+  id               String     @id @default(uuid())
+  salesOrderId     String
+  bookId           String?
+  title            String
+  isbn             String?
+  sku              String
+  mrp              Decimal    @db.Decimal(15, 2)
+  quantity         Decimal    @db.Decimal(12, 2) // Ordered
+  deliveredQuantity Decimal   @default(0.00) @db.Decimal(12, 2)
+  unitRate         Decimal    @db.Decimal(15, 2)
+  discountPercent  Decimal    @default(0.00) @db.Decimal(5, 2)
+  taxRate          Decimal    @default(0.00) @db.Decimal(5, 2)
+  cgstRate         Decimal    @default(0.00) @db.Decimal(5, 2)
+  sgstRate         Decimal    @default(0.00) @db.Decimal(5, 2)
+  igstRate         Decimal    @default(0.00) @db.Decimal(5, 2)
+  cgstAmount       Decimal    @default(0.00) @db.Decimal(15, 2)
+  sgstAmount       Decimal    @default(0.00) @db.Decimal(15, 2)
+  igstAmount       Decimal    @default(0.00) @db.Decimal(15, 2)
+  lineTotal        Decimal    @db.Decimal(15, 2)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  salesOrder       SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+
+  @@map("sales_order_items")
+}
+
+model DeliveryChallan {
+  id              String                @id @default(uuid())
+  companyId       String
+  branchId        String?
+  challanNumber   String                // e.g. DC/2026/0001
+  salesOrderId    String?
+  orderNumber     String?
+  customerId      String
+  customerName    String
+  deliveryAddress String?
+  dispatchDate    DateTime              @default(now())
+  transporterName String?
+  lrNumber        String?
+  vehicleNumber   String?
+  eWayBillNumber  String?
+  status          String                @default("DISPATCHED") // DISPATCHED, DELIVERED, INVOICED
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  company         Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  salesOrder      SalesOrder?           @relation(fields: [salesOrderId], references: [id], onDelete: SetNull)
+  items           DeliveryChallanItem[]
+  salesInvoices   SalesInvoice[]
+
+  @@unique([companyId, challanNumber])
+  @@map("delivery_challans")
+}
+
+model DeliveryChallanItem {
+  id                String          @id @default(uuid())
+  deliveryChallanId String
+  bookId            String?
+  sku               String
+  title             String
+  orderedQuantity   Decimal         @db.Decimal(12, 2)
+  dispatchedQuantity Decimal        @db.Decimal(12, 2)
+  warehouseRack     String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  deliveryChallan   DeliveryChallan @relation(fields: [deliveryChallanId], references: [id], onDelete: Cascade)
+
+  @@map("delivery_challan_items")
+}
+
+model SalesInvoice {
+  id                  String             @id @default(uuid())
+  companyId           String
+  branchId            String?
+  invoiceNumber       String             // Tax Invoice # e.g. SINV/2026/0001 or POS/2026/0001
+  salesChannel        SalesChannel       @default(WHOLESALE)
+  salesOrderId        String?
+  orderNumber         String?
+  deliveryChallanId   String?
+  challanNumber       String?
+  customerId          String
+  customerName        String
+  customerGstin       String?
+  customerStateCode   String?
+  placeOfSupply       String             @default("07-Delhi")
+  invoiceDate         DateTime           @default(now())
+  dueDate             DateTime
+  paymentMethod       PaymentMethod      @default(CUSTOMER_CREDIT)
+  paymentDetails      Json?              // For split payments: { cashAmount, cardAmount, upiAmount, upiRef, cardLast4 }
+  subtotalTaxable     Decimal            @db.Decimal(15, 2)
+  cgstAmount          Decimal            @default(0.00) @db.Decimal(15, 2)
+  sgstAmount          Decimal            @default(0.00) @db.Decimal(15, 2)
+  igstAmount          Decimal            @default(0.00) @db.Decimal(15, 2)
+  totalTaxAmount      Decimal            @default(0.00) @db.Decimal(15, 2)
+  freightAmount       Decimal            @default(0.00) @db.Decimal(15, 2)
+  roundOff            Decimal            @default(0.00) @db.Decimal(15, 2)
+  netPayable          Decimal            @db.Decimal(15, 2)
+  paidAmount          Decimal            @default(0.00) @db.Decimal(15, 2)
+  balanceDue          Decimal            @db.Decimal(15, 2)
+  status              SalesInvoiceStatus @default(POSTED)
+  accountingVoucherId String?            // Linked JournalEntry ID (SALES_INVOICE)
+  voucherNumber       String?            // e.g. SV/2026/0001
+  isPosCounterSale    Boolean            @default(false)
+  posShiftId          String?
+  cashierName         String?
+  notes               String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  salesOrder          SalesOrder?        @relation(fields: [salesOrderId], references: [id], onDelete: SetNull)
+  deliveryChallan     DeliveryChallan?   @relation(fields: [deliveryChallanId], references: [id], onDelete: SetNull)
+  items               SalesInvoiceItem[]
+  salesReturns        SalesReturn[]
+
+  @@unique([companyId, invoiceNumber])
+  @@map("sales_invoices")
+}
+
+model SalesInvoiceItem {
+  id             String       @id @default(uuid())
+  salesInvoiceId String
+  bookId         String?
+  sku            String
+  barcode        String?
+  title          String
+  hsnSacCode     String       @default("4901")
+  mrp            Decimal      @db.Decimal(15, 2)
+  quantity       Decimal      @db.Decimal(12, 2)
+  unitRate       Decimal      @db.Decimal(15, 2)
+  discountPercent Decimal     @default(0.00) @db.Decimal(5, 2)
+  discountAmount Decimal      @default(0.00) @db.Decimal(15, 2)
+  taxableAmount  Decimal      @db.Decimal(15, 2)
+  taxRate        Decimal      @default(0.00) @db.Decimal(5, 2)
+  cgstRate       Decimal      @default(0.00) @db.Decimal(5, 2)
+  sgstRate       Decimal      @default(0.00) @db.Decimal(5, 2)
+  igstRate       Decimal      @default(0.00) @db.Decimal(5, 2)
+  cgstAmount     Decimal      @default(0.00) @db.Decimal(15, 2)
+  sgstAmount     Decimal      @default(0.00) @db.Decimal(15, 2)
+  igstAmount     Decimal      @default(0.00) @db.Decimal(15, 2)
+  totalAmount    Decimal      @db.Decimal(15, 2)
+  purchaseCost   Decimal      @default(0.00) @db.Decimal(15, 2) // For gross margin reporting
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  salesInvoice   SalesInvoice @relation(fields: [salesInvoiceId], references: [id], onDelete: Cascade)
+
+  @@map("sales_invoice_items")
+}
+
+model SalesReturn {
+  id                  String       @id @default(uuid())
+  companyId           String
+  creditNoteNumber    String       // e.g. CN/2026/0001
+  salesInvoiceId      String
+  invoiceNumber       String
+  customerId          String
+  customerName        String
+  returnDate          DateTime     @default(now())
+  returnReason        String       // EXCESS_ORDER, DAMAGED_BINDING, WRONG_EDITION, STORE_RETURN
+  taxableAmount       Decimal      @db.Decimal(15, 2)
+  cgstAmount          Decimal      @default(0.00) @db.Decimal(15, 2)
+  sgstAmount          Decimal      @default(0.00) @db.Decimal(15, 2)
+  igstAmount          Decimal      @default(0.00) @db.Decimal(15, 2)
+  totalReturnAmount   Decimal      @db.Decimal(15, 2)
+  accountingVoucherId String?      // Linked JournalEntry ID (CREDIT_NOTE)
+  voucherNumber       String?      // CN/2026/0001
+  items               Json         // Array: [{ bookId, sku, title, returnedQty, unitRate, taxableAmount, totalAmount }]
+  status              String       @default("CONFIRMED")
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  company             Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  salesInvoice        SalesInvoice @relation(fields: [salesInvoiceId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, creditNoteNumber])
+  @@map("sales_returns")
+}
+
+model CustomerReceipt {
+  id                  String   @id @default(uuid())
+  companyId           String
+  receiptNumber       String   // e.g. RV/2026/0002
+  customerId          String
+  customerName        String
+  receiptDate         DateTime @default(now())
+  paymentMethod       PaymentMethod @default(BANK_TRANSFER_NEFT_RTGS)
+  bankLedgerId        String   // led_bank_hdfc, led_cash
+  bankLedgerName      String
+  referenceNumber     String?  // Cheque # or UTR #
+  amount              Decimal  @db.Decimal(15, 2)
+  discountAllowed     Decimal  @default(0.00) @db.Decimal(15, 2)
+  tdsDeductedByCustomer Decimal @default(0.00) @db.Decimal(15, 2)
+  invoicesSettled     Json     // [{ invoiceId, invoiceNumber, allocatedAmount }]
+  accountingVoucherId String?  // Linked JournalEntry ID (RECEIPT_VOUCHER)
+  voucherNumber       String?  // RV/2026/0002
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, receiptNumber])
+  @@map("customer_receipts")
+}
+
+model PosShift {
+  id               String    @id @default(uuid())
+  companyId        String
+  branchId         String
+  cashierId        String
+  cashierName      String
+  shiftOpenedAt    DateTime  @default(now())
+  shiftClosedAt    DateTime?
+  openingFloatCash Decimal   @default(5000.00) @db.Decimal(15, 2)
+  cashSalesTotal   Decimal   @default(0.00) @db.Decimal(15, 2)
+  cardSalesTotal   Decimal   @default(0.00) @db.Decimal(15, 2)
+  upiSalesTotal    Decimal   @default(0.00) @db.Decimal(15, 2)
+  totalSales       Decimal   @default(0.00) @db.Decimal(15, 2)
+  closingDrawerCash Decimal  @default(0.00) @db.Decimal(15, 2)
+  cashVariance     Decimal   @default(0.00) @db.Decimal(15, 2)
+  status           String    @default("OPEN") // OPEN, CLOSED
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  company          Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("pos_shifts")
+}
+
+// ============================================================================
+// PHASE 08 – INVENTORY & WAREHOUSE MANAGEMENT MODELS
+// ============================================================================
+
+model Warehouse {
+  id               String            @id @default(uuid())
+  companyId        String
+  branchId         String?
+  code             String            @unique
+  name             String
+  type             String            @default("CENTRAL_DEPOT") // CENTRAL_DEPOT, BRANCH_GODOWN, PRESS_STORE, RETAIL_OUTLET, DAMAGED_HOLD
+  address          String
+  city             String
+  state            String
+  stateCode        String            @default("07")
+  pincode          String
+  contactPerson    String?
+  contactPhone     String?
+  capacitySqFt     Int               @default(10000)
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  racks            WarehouseRack[]
+  stocks           WarehouseStock[]
+  movements        StockMovement[]
+  transfersFrom    StockTransfer[]   @relation("TransfersFrom")
+  transfersTo      StockTransfer[]   @relation("TransfersTo")
+  adjustments      StockAdjustment[]
+  auditSessions    StockAuditSession[]
+
+  @@map("warehouses")
+}
+
+model WarehouseRack {
+  id               String            @id @default(uuid())
+  warehouseId      String
+  rackCode         String            // e.g. RACK-A1-01
+  aisle            String            // e.g. AISLE-A
+  shelfLevel       String            // e.g. SHELF-3
+  binNumber        String?           // e.g. BIN-04
+  capacityBooks    Int               @default(1000)
+  currentCount     Int               @default(0)
+  categoryAssigned String?
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  warehouse        Warehouse         @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@unique([warehouseId, rackCode])
+  @@map("warehouse_racks")
+}
+
+model WarehouseStock {
+  id                   String        @id @default(uuid())
+  companyId            String
+  warehouseId          String
+  bookId               String
+  sku                  String
+  title                String
+  isbn                 String?
+  rackShelfCode        String?       // e.g. RACK-B2-01
+  quantityOnHand       Int           @default(0)
+  quantityReserved     Int           @default(0)
+  quantityAvailable    Int           @default(0) // onHand - reserved
+  reorderLevel         Int           @default(100)
+  safetyStock          Int           @default(50)
+  maxStockLevel        Int           @default(5000)
+  valuationMethod      String        @default("WEIGHTED_AVERAGE") // FIFO, WEIGHTED_AVERAGE
+  weightedAverageCost  Decimal       @default(0.00) @db.Decimal(15, 2)
+  totalValuation       Decimal       @default(0.00) @db.Decimal(15, 2)
+  lastInwardDate       DateTime?
+  lastOutwardDate      DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  company              Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  warehouse            Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@unique([warehouseId, bookId])
+  @@index([sku])
+  @@map("warehouse_stocks")
+}
+
+model StockMovement {
+  id                   String        @id @default(uuid())
+  companyId            String
+  warehouseId          String
+  bookId               String
+  sku                  String
+  movementType         String        // INWARD_PURCHASE, INWARD_PRODUCTION, INWARD_RETURN, INWARD_TRANSFER, OUTWARD_SALE, OUTWARD_TRANSFER, OUTWARD_DAMAGE, OUTWARD_LOST, ADJUSTMENT_CYCLE_COUNT, OPENING_BALANCE
+  referenceType        String        // PURCHASE_INVOICE, GRN, SALES_INVOICE, TRANSFER, ADJUSTMENT, PHYSICAL_AUDIT
+  referenceId          String?
+  referenceNumber      String?       // e.g. GRN/2026/0001, SINV/2026/0001
+  quantityDelta        Int           // Positive for inward, negative for outward
+  unitCost             Decimal       @default(0.00) @db.Decimal(15, 2)
+  totalValue           Decimal       @default(0.00) @db.Decimal(15, 2)
+  balanceOnHand        Int           @default(0)
+  notes                String?
+  performedById        String?
+  createdAt            DateTime      @default(now())
+
+  company              Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  warehouse            Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@index([warehouseId, sku])
+  @@map("stock_movements")
+}
+
+model FifoCostLot {
+  id                   String        @id @default(uuid())
+  companyId            String
+  warehouseId          String
+  bookId               String
+  sku                  String
+  lotNumber            String        // e.g. LOT-2026-0001
+  inwardDate           DateTime      @default(now())
+  originalQuantity     Int
+  remainingQuantity    Int
+  unitCost             Decimal       @db.Decimal(15, 2)
+  isExhausted          Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@index([warehouseId, sku, isExhausted])
+  @@map("fifo_cost_lots")
+}
+
+model StockTransfer {
+  id                   String              @id @default(uuid())
+  companyId            String
+  transferNumber       String              @unique // e.g. TRF/2026/0001
+  transferType         String              @default("WAREHOUSE_TO_WAREHOUSE") // WAREHOUSE_TO_WAREHOUSE, BRANCH_TO_BRANCH, INTER_COMPANY
+  fromWarehouseId      String
+  toWarehouseId        String
+  dispatchDate         DateTime            @default(now())
+  expectedArrivalDate  DateTime?
+  receivedDate         DateTime?
+  status               String              @default("DRAFT") // DRAFT, DISPATCHED_IN_TRANSIT, PARTIALLY_RECEIVED, COMPLETED, CANCELLED
+  transporterName      String?
+  vehicleNumber        String?
+  lrNumber             String?
+  eWayBillNumber       String?
+  notes                String?
+  createdById          String
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  company              Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  fromWarehouse        Warehouse           @relation("TransfersFrom", fields: [fromWarehouseId], references: [id])
+  toWarehouse          Warehouse           @relation("TransfersTo", fields: [toWarehouseId], references: [id])
+  items                StockTransferItem[]
+
+  @@map("stock_transfers")
+}
+
+model StockTransferItem {
+  id                   String        @id @default(uuid())
+  transferId           String
+  bookId               String
+  sku                  String
+  title                String
+  dispatchedQuantity   Int
+  receivedQuantity     Int           @default(0)
+  damagedQuantity      Int           @default(0)
+  discrepancyQuantity  Int           @default(0) // dispatched - (received + damaged)
+  unitCost             Decimal       @default(0.00) @db.Decimal(15, 2)
+  fromRackCode         String?
+  toRackCode           String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  transfer             StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+
+  @@map("stock_transfer_items")
+}
+
+model StockAdjustment {
+  id                   String                @id @default(uuid())
+  companyId            String
+  warehouseId          String
+  adjustmentNumber     String                @unique // e.g. ADJ/2026/0001
+  adjustmentType       String                // CYCLE_COUNT_RECONCILIATION, DAMAGE_WRITEOFF, SHRINKAGE_LOST, OBSOLETE_EXPIRED, OPENING_STOCK
+  adjustmentDate       DateTime              @default(now())
+  reason               String
+  accountingVoucherId  String?
+  voucherNumber        String?               // e.g. JV/2026/0005
+  totalVarianceQuantity Int                  @default(0)
+  totalVarianceValue   Decimal               @default(0.00) @db.Decimal(15, 2)
+  status               String                @default("POSTED") // DRAFT, APPROVED, POSTED
+  approvedById         String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  company              Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  warehouse            Warehouse             @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  items                StockAdjustmentItem[]
+
+  @@map("stock_adjustments")
+}
+
+model StockAdjustmentItem {
+  id                   String          @id @default(uuid())
+  adjustmentId         String
+  bookId               String
+  sku                  String
+  title                String
+  systemQuantity       Int
+  physicalQuantity     Int
+  varianceQuantity     Int             // physical - system
+  unitCost             Decimal         @db.Decimal(15, 2)
+  varianceValue        Decimal         @db.Decimal(15, 2) // varianceQuantity * unitCost
+  rackShelfCode        String?
+  notes                String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  adjustment           StockAdjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+
+  @@map("stock_adjustment_items")
+}
+
+model StockAuditSession {
+  id                   String            @id @default(uuid())
+  companyId            String
+  warehouseId          String
+  auditSessionNumber   String            @unique // e.g. AUD/2026/0001
+  auditDate            DateTime          @default(now())
+  scheduledBy          String
+  status               String            @default("COMPLETED") // SCHEDULED, IN_PROGRESS, COMPLETED, DISCREPANCY_FLAGGED
+  totalItemsAudited    Int               @default(0)
+  matchedCount         Int               @default(0)
+  varianceCount        Int               @default(0)
+  netVarianceValue     Decimal           @default(0.00) @db.Decimal(15, 2)
+  notes                String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  company              Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  warehouse            Warehouse         @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  items                StockAuditItem[]
+
+  @@map("stock_audit_sessions")
+}
+
+model StockAuditItem {
+  id                   String            @id @default(uuid())
+  auditSessionId       String
+  bookId               String
+  sku                  String
+  title                String
+  rackShelfCode        String?
+  systemQuantity       Int
+  countedQuantity      Int
+  varianceQuantity     Int               // counted - system
+  unitCost             Decimal           @db.Decimal(15, 2)
+  varianceValue        Decimal           @db.Decimal(15, 2)
+  discrepancyResolved  Boolean           @default(false)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  auditSession         StockAuditSession @relation(fields: [auditSessionId], references: [id], onDelete: Cascade)
+
+  @@map("stock_audit_items")
+}
+
+// ============================================================================
+// PHASE 09 – PUBLISHING & PRODUCTION MANAGEMENT MODELS
+// ============================================================================
+
+model PublishingProject {
+  id                   String            @id @default(uuid())
+  companyId            String
+  projectNumber        String            @unique // e.g. PRJ/2026/0001
+  title                String
+  subtitle             String?
+  language             String            @default("English")
+  edition              String            @default("1st Edition")
+  category             String            @default("Higher Education")
+  status               String            @default("EDITORIAL_REVIEW") // PROPOSAL, MANUSCRIPT_SUBMITTED, EDITORIAL_REVIEW, TYPESETTING_PROOF, PRE_PRESS, PRINT_PRODUCTION, PUBLISHED, ARCHIVED
+  authorId             String
+  authorName           String
+  editorId             String?
+  editorName           String?
+  isbnAllocated        String?           // e.g. 9788177099901
+  targetPublicationDate DateTime?
+  plannedPrintRun      Int               @default(3000)
+  targetMrp            Decimal           @default(495.00) @db.Decimal(15, 2)
+  manuscriptWordCount  Int?
+  estimatedPages       Int               @default(450)
+  notes                String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  company              Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  productionOrders     ProductionOrder[]
+
+  @@map("publishing_projects")
+}
+
+model ProductionOrder {
+  id                   String               @id @default(uuid())
+  companyId            String
+  projectId            String?
+  orderNumber          String               @unique // e.g. PROD/2026/0001
+  bookId               String?
+  sku                  String
+  title                String
+  edition              String               @default("1st Edition")
+  printRun             Int                  // Copies to print e.g. 3000
+  goodCopiesProduced   Int                  @default(0)
+  rejectedCopiesCount  Int                  @default(0)
+  sheetSize            String               @default("23x36 inches")
+  paperGsm             Int                  @default(70) // 70 GSM Maplitho
+  paperType            String               @default("Maplitho Natural Shade")
+  coverGsm             Int                  @default(300) // 300 GSM Art Card
+  coverFinishing       String               @default("Thermal Matte Lamination + Spot UV")
+  bindingType          String               @default("Section Sewn & Perfect Bound")
+  pagesCount           Int                  @default(448)
+  reamsRequired        Decimal              @default(0.00) @db.Decimal(15, 2)
+  platesRequired       Int                  @default(28) // CTP 4-color or 1-color plates
+  status               String               @default("PLANNING") // PLANNING, MATERIAL_ISSUED, PRINTING_IN_PROGRESS, BINDING_IN_PROGRESS, QA_INSPECTION, COMPLETED, CANCELLED
+  startDate            DateTime             @default(now())
+  targetCompletionDate DateTime?
+  completedDate        DateTime?
+  pressVendorId        String?
+  pressVendorName      String?
+  bindingVendorId      String?
+  bindingVendorName    String?
+  totalProductionCost  Decimal              @default(0.00) @db.Decimal(15, 2)
+  perCopyCost          Decimal              @default(0.00) @db.Decimal(15, 2)
+  accountingVoucherId  String?
+  voucherNumber        String?              // Finished Goods capitalization voucher
+  notes                String?
+  createdById          String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  company              Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  project              PublishingProject?   @relation(fields: [projectId], references: [id])
+  costSheet            ProductionCostSheet?
+  jobOrders            VendorJobOrder[]
+  inspections          QualityInspection[]
+
+  @@map("production_orders")
+}
+
+model ProductionCostSheet {
+  id                   String           @id @default(uuid())
+  productionOrderId    String           @unique
+  paperCost            Decimal          @default(0.00) @db.Decimal(15, 2)
+  printingCost         Decimal          @default(0.00) @db.Decimal(15, 2)
+  plateCost            Decimal          @default(0.00) @db.Decimal(15, 2)
+  bindingCost          Decimal          @default(0.00) @db.Decimal(15, 2)
+  coverCost            Decimal          @default(0.00) @db.Decimal(15, 2)
+  packagingCost        Decimal          @default(0.00) @db.Decimal(15, 2)
+  labourCost           Decimal          @default(0.00) @db.Decimal(15, 2)
+  freightCost          Decimal          @default(0.00) @db.Decimal(15, 2)
+  overheadCost         Decimal          @default(0.00) @db.Decimal(15, 2)
+  totalCost            Decimal          @default(0.00) @db.Decimal(15, 2)
+  goodCopiesProduced   Int
+  perCopyCost          Decimal          @default(0.00) @db.Decimal(15, 2)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  productionOrder      ProductionOrder  @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+
+  @@map("production_cost_sheets")
+}
+
+model VendorJobOrder {
+  id                   String           @id @default(uuid())
+  companyId            String
+  productionOrderId    String
+  jobOrderNumber       String           @unique // e.g. JOB/2026/0001
+  jobType              String           // PRINTING, BINDING, COVER_FINISHING, PACKAGING
+  vendorId             String
+  vendorName           String
+  vendorGstin          String?
+  orderDate            DateTime         @default(now())
+  dueDate              DateTime?
+  status               String           @default("DRAFT") // DRAFT, MATERIAL_ISSUED, IN_PROGRESS, DELIVERED, BILLED, CANCELLED
+  itemsDeliveredCount  Int              @default(0)
+  materialIssuedNotes  String?          // e.g. Issued 350 reams 70 GSM Maplitho
+  jobWorkRate          Decimal          @default(0.00) @db.Decimal(15, 2)
+  totalJobCharges      Decimal          @default(0.00) @db.Decimal(15, 2)
+  vendorInvoiceNumber  String?
+  accountingVoucherId  String?
+  voucherNumber        String?
+  createdById          String
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  company              Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  productionOrder      ProductionOrder  @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+
+  @@map("vendor_job_orders")
+}
+
+model QualityInspection {
+  id                    String           @id @default(uuid())
+  productionOrderId     String
+  inspectionNumber      String           @unique // e.g. QA/2026/0001
+  inspectionDate        DateTime         @default(now())
+  inspectedBy           String
+  sampleSize            Int              @default(50)
+  approvedCopies        Int
+  rejectedCopies        Int              @default(0)
+  quarantineCopies      Int              @default(0)
+  printRegistrationPass Boolean          @default(true)
+  inkDensityPass        Boolean          @default(true)
+  bindingAdhesionPass   Boolean          @default(true)
+  pageSequencePass      Boolean          @default(true)
+  trimmingPass          Boolean          @default(true)
+  overallStatus         String           @default("PASSED") // PASSED, PASSED_WITH_CONCESSION, REJECTED
+  remarks               String?
+  createdAt             DateTime         @default(now())
+
+  productionOrder       ProductionOrder  @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+
+  @@map("quality_inspections")
+}
+
+model AuthorAgreement {
+  id                      String                  @id @default(uuid())
+  companyId               String
+  agreementNumber         String                  @unique // e.g. AGR/2026/0001
+  authorId                String
+  authorName              String
+  authorEmail             String?
+  authorPan               String?                 // Required for 10% TDS deduction
+  bankAccountNumber       String?
+  bankIfsc                String?
+  bankName                String?
+  contractStartDate       DateTime
+  contractEndDate         DateTime?
+  calculationMethod       String                  @default("PERCENTAGE_OF_MRP") // PERCENTAGE_OF_MRP, PERCENTAGE_OF_NET_SALES, FIXED_AMOUNT_PER_COPY, SLAB_BASED, EDITION_SPECIFIC
+  royaltyPercentage       Decimal                 @default(10.00) @db.Decimal(5, 2)
+  fixedRatePerCopy        Decimal                 @default(0.00) @db.Decimal(12, 2)
+  advanceRoyaltyAmount    Decimal                 @default(0.00) @db.Decimal(15, 2)
+  advanceBalanceRemaining Decimal                 @default(0.00) @db.Decimal(15, 2)
+  minimumGuarantee        Decimal                 @default(0.00) @db.Decimal(15, 2)
+  paymentFrequency        String                  @default("QUARTERLY") // MONTHLY, QUARTERLY, HALF_YEARLY, ANNUAL
+  status                  String                  @default("ACTIVE") // DRAFT, ACTIVE, EXPIRED, TERMINATED
+  documentUrl             String?
+  notes                   String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  company                 Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bookItems               AgreementBookItem[]
+  slabs                   AgreementSlab[]
+  royaltyCalculations     RoyaltyCalculation[]
+
+  @@map("author_agreements")
+}
+
+model AgreementBookItem {
+  id                      String                  @id @default(uuid())
+  agreementId             String
+  bookId                  String?
+  bookTitle               String
+  sku                     String
+  isbn                    String?
+  edition                 String                  @default("1st Edition")
+  territory               String                  @default("ALL") // ALL, DOMESTIC, INTERNATIONAL
+  specificRate            Decimal?                @db.Decimal(12, 2)
+  notes                   String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  agreement               AuthorAgreement         @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@map("agreement_book_items")
+}
+
+model AgreementSlab {
+  id                      String                  @id @default(uuid())
+  agreementId             String
+  fromQuantity            Int
+  toQuantity              Int?
+  royaltyPercentage       Decimal                 @default(0.00) @db.Decimal(5, 2)
+  fixedRate               Decimal?                @db.Decimal(12, 2)
+
+  agreement               AuthorAgreement         @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+
+  @@map("agreement_slabs")
+}
+
+model RoyaltyAccrualPeriod {
+  id                      String                  @id @default(uuid())
+  companyId               String
+  periodNumber            String                  @unique // e.g. ROY/2026/Q1
+  periodName              String                  // e.g. "Q1 FY26-27 (Apr-Jun 2026)"
+  startDate               DateTime
+  endDate                 DateTime
+  status                  String                  @default("CALCULATED") // DRAFT, CALCULATED, REVIEWED, APPROVED, SETTLED
+  totalGrossRoyalty       Decimal                 @default(0.00) @db.Decimal(15, 2)
+  totalAdvanceRecovered   Decimal                 @default(0.00) @db.Decimal(15, 2)
+  totalTdsDeducted        Decimal                 @default(0.00) @db.Decimal(15, 2)
+  totalNetPayable         Decimal                 @default(0.00) @db.Decimal(15, 2)
+  accountingVoucherId     String?
+  voucherNumber           String?                 // General Ledger Accrual Voucher # (JV/2026/XXXX)
+  approvedById            String?
+  approvedAt              DateTime?
+  notes                   String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  company                 Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  calculations            RoyaltyCalculation[]
+
+  @@map("royalty_accrual_periods")
+}
+
+model RoyaltyCalculation {
+  id                      String                  @id @default(uuid())
+  companyId               String
+  periodId                String
+  agreementId             String
+  authorId                String
+  authorName              String
+  authorPan               String?
+  grossCopiesSold         Int                     @default(0)
+  copiesReturned          Int                     @default(0)
+  eligibleNetCopies       Int                     @default(0)
+  grossRoyaltyAmount      Decimal                 @default(0.00) @db.Decimal(15, 2)
+  minimumGuaranteeTopup   Decimal                 @default(0.00) @db.Decimal(15, 2)
+  advanceRecovered        Decimal                 @default(0.00) @db.Decimal(15, 2)
+  tdsRate                 Decimal                 @default(10.00) @db.Decimal(5, 2)
+  tdsAmount               Decimal                 @default(0.00) @db.Decimal(15, 2)
+  netPayableAmount        Decimal                 @default(0.00) @db.Decimal(15, 2)
+  status                  String                  @default("PENDING_APPROVAL") // PENDING_APPROVAL, APPROVED, PAID, CANCELLED
+  notes                   String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  company                 Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  period                  RoyaltyAccrualPeriod    @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  agreement               AuthorAgreement         @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  items                   RoyaltyCalculationItem[]
+  settlement              RoyaltyPaymentSettlement?
+
+  @@map("royalty_calculations")
+}
+
+model RoyaltyCalculationItem {
+  id                      String                  @id @default(uuid())
+  royaltyCalculationId    String
+  bookId                  String?
+  sku                     String
+  bookTitle               String
+  isbn                    String?
+  mrp                     Decimal                 @db.Decimal(12, 2)
+  netSalesValue           Decimal                 @default(0.00) @db.Decimal(15, 2)
+  grossSold               Int                     @default(0)
+  returnedCount           Int                     @default(0)
+  netEligibleSold         Int                     @default(0)
+  royaltyRateDescription  String                  // e.g. "10.0% of MRP" or "Slab (10% to 5k, 12.5% beyond)"
+  calculatedRoyalty       Decimal                 @default(0.00) @db.Decimal(15, 2)
+  createdAt               DateTime                @default(now())
+
+  royaltyCalculation      RoyaltyCalculation      @relation(fields: [royaltyCalculationId], references: [id], onDelete: Cascade)
+
+  @@map("royalty_calculation_items")
+}
+
+model RoyaltyPaymentSettlement {
+  id                      String                  @id @default(uuid())
+  companyId               String
+  calculationId           String                  @unique
+  settlementNumber        String                  @unique // e.g. ROYS/2026/0001
+  authorId                String
+  authorName              String
+  paymentDate             DateTime                @default(now())
+  grossAmountPaid         Decimal                 @default(0.00) @db.Decimal(15, 2)
+  advanceRecouped         Decimal                 @default(0.00) @db.Decimal(15, 2)
+  tdsDeducted             Decimal                 @default(0.00) @db.Decimal(15, 2)
+  netAmountPaid           Decimal                 @default(0.00) @db.Decimal(15, 2)
+  paymentMethod           String                  @default("NEFT") // NEFT, RTGS, CHEQUE, BANK_TRANSFER
+  bankAccountId           String?
+  bankName                String?                 @default("HDFC Bank Corporate A/c")
+  referenceNumber         String                  // UTR or Cheque No
+  accountingVoucherId     String?
+  voucherNumber           String?                 // e.g. PV/2026/0008
+  notes                   String?
+  createdById             String
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  company                 Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  calculation             RoyaltyCalculation      @relation(fields: [calculationId], references: [id], onDelete: Cascade)
+
+  @@map("royalty_payment_settlements")
+}
+
+model Distributor {
+  id                        String                  @id @default(uuid())
+  companyId                 String
+  distributorCode           String                  @unique // e.g. DIST-001
+  name                      String
+  tradeName                 String?
+  territory                 String                  // NORTH_INDIA, WEST_INDIA, SOUTH_INDIA, EAST_INDIA, CENTRAL_INDIA, NATIONAL
+  gstin                     String?
+  pan                       String?
+  registeredAddress         String?
+  city                      String
+  state                     String
+  country                   String                  @default("India")
+  contactPerson             String
+  phone                     String
+  email                     String
+  creditLimit               Decimal                 @default(1000000.00) @db.Decimal(15, 2)
+  currentOutstanding        Decimal                 @default(0.00) @db.Decimal(15, 2)
+  creditDays                Int                     @default(45)
+  paymentTerms              String                  @default("NET_45")
+  commissionPercentage      Decimal                 @default(8.00) @db.Decimal(5, 2) // Overriding commission % on dealer sales
+  standardDiscountPercentage Decimal                @default(40.00) @db.Decimal(5, 2)
+  status                    String                  @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  notes                     String?
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+
+  company                   Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  dealers                   Dealer[]
+  orders                    DistributionOrder[]
+  consignmentIssues         ConsignmentIssue[]
+  commissionSettlements     DistributionCommissionSettlement[]
+
+  @@map("distributors")
+}
+
+model Dealer {
+  id                        String                  @id @default(uuid())
+  companyId                 String
+  distributorId             String?
+  dealerCode                String                  @unique // e.g. DLR-001
+  name                      String
+  tradeName                 String?
+  classification            String                  @default("TIER_2_WHOLESALE") // TIER_1_PRIME, TIER_2_WHOLESALE, RETAIL_BOOKSTORE, INSTITUTIONAL_SUPPLIER
+  territory                 String
+  gstin                     String?
+  pan                       String?
+  address                   String?
+  city                      String
+  state                     String
+  contactPerson             String
+  phone                     String
+  email                     String?
+  creditLimit               Decimal                 @default(250000.00) @db.Decimal(15, 2)
+  currentOutstanding        Decimal                 @default(0.00) @db.Decimal(15, 2)
+  discountPercentage        Decimal                 @default(30.00) @db.Decimal(5, 2)
+  status                    String                  @default("ACTIVE")
+  notes                     String?
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+
+  company                   Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  distributor               Distributor?            @relation(fields: [distributorId], references: [id])
+  orders                    DistributionOrder[]
+
+  @@map("dealers")
+}
+
+model DistributionOrder {
+  id                        String                  @id @default(uuid())
+  companyId                 String
+  orderNumber               String                  @unique // e.g. ORD-DIST/2026/0001
+  orderType                 String                  @default("DISTRIBUTOR_BULK") // DISTRIBUTOR_BULK, DEALER_ORDER
+  distributorId             String?
+  dealerId                  String?
+  orderDate                 DateTime                @default(now())
+  totalMrpAmount            Decimal                 @default(0.00) @db.Decimal(15, 2)
+  discountAmount            Decimal                 @default(0.00) @db.Decimal(15, 2)
+  netOrderAmount            Decimal                 @default(0.00) @db.Decimal(15, 2)
+  totalQuantityOrdered      Int                     @default(0)
+  totalQuantityDispatched   Int                     @default(0)
+  status                    String                  @default("CONFIRMED") // DRAFT, CONFIRMED, ALLOCATED, PARTIALLY_DISPATCHED, COMPLETED, CANCELLED
+  salesInvoiceNumber        String?
+  notes                     String?
+  createdById               String
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+
+  company                   Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  distributor               Distributor?            @relation(fields: [distributorId], references: [id])
+  dealer                    Dealer?                 @relation(fields: [dealerId], references: [id])
+  items                     DistributionOrderItem[]
+  dispatches                DistributionDispatch[]
+
+  @@map("distribution_orders")
+}
+
+model DistributionOrderItem {
+  id                        String                  @id @default(uuid())
+  orderId                   String
+  bookId                    String?
+  sku                       String
+  bookTitle                 String
+  isbn                      String?
+  mrp                       Decimal                 @db.Decimal(12, 2)
+  discountPercentage        Decimal                 @default(40.00) @db.Decimal(5, 2)
+  unitRate                  Decimal                 @db.Decimal(12, 2)
+  quantityOrdered           Int
+  quantityDispatched        Int                     @default(0)
+  totalAmount               Decimal                 @db.Decimal(15, 2)
+
+  order                     DistributionOrder       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("distribution_order_items")
+}
+
+model DistributionDispatch {
+  id                        String                  @id @default(uuid())
+  companyId                 String
+  orderId                   String
+  challanNumber             String                  @unique // e.g. DDC/2026/0001
+  dispatchDate              DateTime                @default(now())
+  transporterName           String                  // VRL Logistics, TCI Express, Blue Dart
+  lrNumber                  String                  // Lorry Receipt No e.g. VRL-DEL-8921
+  vehicleNumber             String?
+  driverPhone               String?
+  destinationCity           String
+  totalItemsCount           Int
+  trackingStatus            String                  @default("DISPATCHED") // DISPATCHED, IN_TRANSIT, DELIVERED, POD_RECEIVED
+  receivedDate              DateTime?
+  acceptedItemsCount        Int                     @default(0)
+  transitDamagedCount       Int                     @default(0)
+  podRemarks                String?
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+
+  company                   Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  order                     DistributionOrder       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("distribution_dispatches")
+}
+
+model ConsignmentIssue {
+  id                        String                  @id @default(uuid())
+  companyId                 String
+  issueNumber               String                  @unique // e.g. CSG/2026/0001
+  distributorId             String
+  distributorName           String
+  issueDate                 DateTime                @default(now())
+  status                    String                  @default("ISSUED") // ISSUED, PARTIALLY_SETTLED, RECONCILED
+  totalIssuedQuantity       Int                     @default(0)
+  totalSoldQuantity         Int                     @default(0)
+  totalReturnedQuantity     Int                     @default(0)
+  balanceOnHoldQuantity     Int                     @default(0)
+  notes                     String?
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+
+  company                   Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  distributor               Distributor             @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+  items                     ConsignmentIssueItem[]
+
+  @@map("consignment_issues")
+}
+
+model ConsignmentIssueItem {
+  id                        String                  @id @default(uuid())
+  consignmentIssueId        String
+  bookId                    String?
+  sku                       String
+  bookTitle                 String
+  isbn                      String?
+  mrp                       Decimal                 @db.Decimal(12, 2)
+  discountPercentage        Decimal                 @default(40.00) @db.Decimal(5, 2)
+  issuedQuantity            Int
+  soldQuantity              Int                     @default(0)
+  returnedQuantity          Int                     @default(0)
+  balanceQuantity           Int
+  createdAt                 DateTime                @default(now())
+
+  consignmentIssue          ConsignmentIssue        @relation(fields: [consignmentIssueId], references: [id], onDelete: Cascade)
+
+  @@map("consignment_issue_items")
+}
+
+model DistributionCommissionSettlement {
+  id                        String                  @id @default(uuid())
+  companyId                 String
+  settlementNumber          String                  @unique // e.g. CMS/2026/0001
+  distributorId             String
+  distributorName           String
+  periodName                String                  // e.g. "Q2 FY26-27 Commission Cycle"
+  secondarySalesTurnover    Decimal                 @default(0.00) @db.Decimal(15, 2)
+  commissionPercentage      Decimal                 @default(8.00) @db.Decimal(5, 2)
+  baseCommissionAmount      Decimal                 @default(0.00) @db.Decimal(15, 2)
+  targetBonusAmount         Decimal                 @default(0.00) @db.Decimal(15, 2)
+  totalCommissionPayable    Decimal                 @default(0.00) @db.Decimal(15, 2)
+  status                    String                  @default("CALCULATED") // CALCULATED, APPROVED, SETTLED
+  accountingVoucherId       String?
+  voucherNumber             String?                 // e.g. JV/2026/0661
+  paymentVoucherNumber      String?                 // e.g. PV/2026/0662
+  notes                     String?
+  createdById               String
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+
+  company                   Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  distributor               Distributor             @relation(fields: [distributorId], references: [id], onDelete: Cascade)
+
+  @@map("distribution_commission_settlements")
+}
+
+// ----------------------------------------------------
+// PHASE 12: GST & INDIAN TAXATION MODELS
+// ----------------------------------------------------
+
+model GstRateConfig {
+  id                    String    @id @default(uuid())
+  companyId             String
+  hsnSacCode            String    // e.g. "4901", "4903", "4905", "9989", "9973", "4802"
+  description           String
+  itemType              String    @default("GOODS") // GOODS, SERVICES
+  igstRate              Decimal   @default(0.00) @db.Decimal(5, 2)
+  cgstRate              Decimal   @default(0.00) @db.Decimal(5, 2)
+  sgstRate              Decimal   @default(0.00) @db.Decimal(5, 2)
+  cessRate              Decimal   @default(0.00) @db.Decimal(5, 2)
+  isExempt              Boolean   @default(false)
+  exemptionNotification String?   // e.g. "Notification No. 02/2017-Central Tax (Rate)"
+  effectiveFrom         DateTime  @default(now())
+  effectiveTo           DateTime?
+  status                String    @default("ACTIVE") // ACTIVE, INACTIVE
+  adminReviewed         Boolean   @default(true)
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, hsnSacCode])
+  @@map("gst_rate_configs")
+}
+
+model TaxInvoiceRecord {
+  id                    String    @id @default(uuid())
+  companyId             String
+  branchId              String?
+  docType               String    @default("TAX_INVOICE") // TAX_INVOICE, BILL_OF_SUPPLY, CREDIT_NOTE, DEBIT_NOTE
+  invoiceNumber         String    @unique
+  invoiceDate           DateTime  @default(now())
+  financialYear         String    // e.g. "2026-2027"
+  taxPeriod             String    // e.g. "2026-10" or "Q3"
+  supplierGstin         String
+  supplierStateCode     String    // 2-digit e.g. "07"
+  recipientGstin        String?
+  recipientName         String
+  recipientType         String    @default("B2B") // B2B, B2CL, B2CS, EXEMPT
+  placeOfSupply         String    // 2-digit state code e.g. "27"
+  isInterState          Boolean   @default(false)
+  isReverseCharge       Boolean   @default(false)
+  pricingType           String    @default("EXCLUSIVE") // EXCLUSIVE, INCLUSIVE
+  originalInvoiceNumber String?   // For Credit/Debit Notes
+  originalInvoiceDate   DateTime?
+  items                 Json      // Array of item lines
+  totalTaxableValue     Decimal   @default(0.00) @db.Decimal(15, 2)
+  cgstAmount            Decimal   @default(0.00) @db.Decimal(15, 2)
+  sgstAmount            Decimal   @default(0.00) @db.Decimal(15, 2)
+  igstAmount            Decimal   @default(0.00) @db.Decimal(15, 2)
+  cessAmount            Decimal   @default(0.00) @db.Decimal(15, 2)
+  roundingOff           Decimal   @default(0.00) @db.Decimal(5, 2)
+  grandTotal            Decimal   @default(0.00) @db.Decimal(15, 2)
+  accountingVoucherNumber String?
+  status                String    @default("GENERATED") // GENERATED, CANCELLED, FILED
+  irn                   String?   // 64-char IRN hash
+  irnStatus             String?   // GENERATED, CANCELLED, NOT_APPLICABLE
+  signedQrCode          String?
+  signedInvoice         String?
+  ewbNumber             String?   // 12-digit E-Way Bill Number
+  ewbStatus             String?   // GENERATED, CANCELLED, NOT_APPLICABLE
+  ewbValidUntil         DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("tax_invoice_records")
+}
+
+model TdsConfiguration {
+  id                    String    @id @default(uuid())
+  companyId             String
+  sectionCode           String    // e.g. "194C_INDIVIDUAL", "194J_ROYALTY"
+  sectionName           String
+  description           String
+  thresholdLimit        Decimal   @default(30000.00) @db.Decimal(12, 2)
+  tdsRateWithPan        Decimal   @default(10.00) @db.Decimal(5, 2)
+  tdsRateWithoutPan     Decimal   @default(20.00) @db.Decimal(5, 2)
+  applicableTo          String    @default("VENDOR") // VENDOR, AUTHOR, CONTRACTOR
+  status                String    @default("ACTIVE")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, sectionCode])
+  @@map("tds_configurations")
+}
+
+model TdsDeductionRecord {
+  id                    String    @id @default(uuid())
+  companyId             String
+  deductionType         String    @default("PAYABLE") // PAYABLE, RECEIVABLE
+  financialYear         String    // e.g. "2026-2027"
+  quarter               String    @default("Q2") // Q1, Q2, Q3, Q4
+  sectionCode           String
+  partyId               String
+  partyName             String
+  partyPan              String
+  isPanValid            Boolean   @default(true)
+  billOrPaymentRef      String
+  paymentDate           DateTime  @default(now())
+  grossAmount           Decimal   @default(0.00) @db.Decimal(15, 2)
+  tdsRate               Decimal   @default(10.00) @db.Decimal(5, 2)
+  tdsAmount             Decimal   @default(0.00) @db.Decimal(15, 2)
+  netAmount             Decimal   @default(0.00) @db.Decimal(15, 2)
+  depositStatus         String    @default("PENDING") // PENDING, DEPOSITED
+  challanBsrCode        String?
+  challanNumber         String?
+  challanDate           DateTime?
+  form16aCertificateNumber String?
+  accountingVoucherNumber String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("tds_deduction_records")
+}
+
+model EWayBillRecord {
+  id                    String    @id @default(uuid())
+  companyId             String
+  ewbNumber             String    @unique // 12-digit number
+  docType               String    @default("INV") // INV, BIL, CHL
+  docNumber             String
+  docDate               DateTime  @default(now())
+  fromGstin             String
+  toGstin               String
+  dispatchAddress       String
+  shipToAddress         String
+  transporterId         String?
+  transporterName       String
+  vehicleNumber         String
+  distanceKm            Int
+  validFrom             DateTime  @default(now())
+  validUntil            DateTime
+  status                String    @default("ACTIVE") // ACTIVE, CANCELLED, EXPIRED
+  cancelReason          String?
+  cancelDate            DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("eway_bill_records")
+}
+
+model TaxAuditLog {
+  id                    String    @id @default(uuid())
+  companyId             String
+  action                String    // RATE_CONFIGURED, INVOICE_GENERATED, EWB_GENERATED, IRN_CANCELLED
+  entityType            String
+  entityId              String
+  performedBy           String
+  oldValues             Json?
+  newValues             Json?
+  remarks               String
+  timestamp             DateTime  @default(now())
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("tax_audit_logs")
+}
+
+model TaxApiIntegrationLog {
+  id                    String    @id @default(uuid())
+  companyId             String
+  serviceType           String    // E_INVOICE_IRN, E_WAY_BILL, GSTR1_FILING, GSTIN_SEARCH
+  provider              String    // NIC_SANDBOX, CLEAR_TAX, OFFLINE_MOCK
+  requestEndpoint       String
+  requestPayload        Json
+  responsePayload       Json
+  httpStatusCode        Int
+  status                String    // SUCCESS, FAILED
+  errorMessage          String?
+  timestamp             DateTime  @default(now())
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("tax_api_integration_logs")
+}
+
+// ----------------------------------------------------
+// PHASE 13: BANKING & CASH MANAGEMENT MODELS
+// ----------------------------------------------------
+
+model BankAccount {
+  id                    String    @id @default(uuid())
+  companyId             String
+  branchId              String?
+  accountName           String    // e.g. "HDFC Bank Corporate Current A/c"
+  accountNumber         String
+  bankName              String    // e.g. "HDFC Bank Ltd."
+  ifscCode              String    // e.g. "HDFC0001234"
+  branchName            String
+  swiftCode             String?
+  currency              String    @default("INR")
+  accountType           String    @default("CURRENT") // CURRENT, SAVINGS, OVERDRAFT
+  openingBalance        Decimal   @default(0.00) @db.Decimal(15, 2)
+  currentBalance        Decimal   @default(0.00) @db.Decimal(15, 2)
+  ledgerId              String?   // mapped to General Ledger e.g. "led_bank_hdfc"
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  transactions          BankTransactionRecord[]
+  cheques               ChequeLeaf[]
+  reconciliations       BankReconciliationRecord[]
+
+  @@unique([companyId, accountNumber])
+  @@map("bank_accounts")
+}
+
+model CashRegister {
+  id                    String    @id @default(uuid())
+  companyId             String
+  branchId              String?
+  name                  String    // e.g. "Central Cash Desk", "Petty Cash Desk"
+  code                  String
+  cashierName           String
+  openingBalance        Decimal   @default(0.00) @db.Decimal(15, 2)
+  currentBalance        Decimal   @default(0.00) @db.Decimal(15, 2)
+  ledgerId              String?   // mapped to General Ledger e.g. "led_cash"
+  isPettyCash           Boolean   @default(false)
+  status                String    @default("ACTIVE") // ACTIVE, CLOSED
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  transactions          CashTransactionRecord[]
+  closings              CashClosingSession[]
+
+  @@unique([companyId, code])
+  @@map("cash_registers")
+}
+
+model BankTransactionRecord {
+  id                    String    @id @default(uuid())
+  companyId             String
+  bankAccountId         String
+  transactionType       String    // RECEIPT, PAYMENT, CONTRA_TRANSFER, BANK_CHARGE, INTEREST
+  paymentMethod         String    // CHEQUE, NEFT, RTGS, IMPS, UPI, CARD, GATEWAY
+  transactionDate       DateTime  @default(now())
+  valueDate             DateTime?
+  referenceNumber       String    // Cheque #, UTR, Auth code
+  partyName             String?
+  partyLedgerId         String?
+  debitAmount           Decimal   @default(0.00) @db.Decimal(15, 2) // Deposit into bank
+  creditAmount          Decimal   @default(0.00) @db.Decimal(15, 2) // Withdrawal from bank
+  runningBalance        Decimal   @default(0.00) @db.Decimal(15, 2)
+  narration             String
+  accountingVoucherNumber String?
+  reconciliationStatus  String    @default("UNRECONCILED") // UNRECONCILED, MATCHED, CLEARED, BOUNCED
+  reconciliationDate    DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bankAccount           BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+
+  @@map("bank_transactions")
+}
+
+model ChequeLeaf {
+  id                    String    @id @default(uuid())
+  companyId             String
+  bankAccountId         String
+  chequeNumber          String
+  chequeType            String    @default("ISSUED") // ISSUED, RECEIVED
+  issueOrReceiptDate    DateTime  @default(now())
+  payeeOrDrawer         String
+  amount                Decimal   @db.Decimal(15, 2)
+  clearingDate          DateTime?
+  bounceDate            DateTime?
+  bounceReason          String?
+  bounceCharges         Decimal   @default(0.00) @db.Decimal(10, 2)
+  status                String    @default("ISSUED") // ISSUED, RECEIVED, DEPOSITED, CLEARED, BOUNCED, CANCELLED
+  voucherNumber         String?
+  reversalVoucherNumber String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bankAccount           BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+
+  @@map("cheque_leaves")
+}
+
+model CashTransactionRecord {
+  id                    String    @id @default(uuid())
+  companyId             String
+  cashRegisterId        String
+  transactionType       String    // RECEIPT, PAYMENT, CONTRA_DEPOSIT, PETTY_EXPENSE
+  transactionDate       DateTime  @default(now())
+  receiptNumber         String
+  partyName             String?
+  partyLedgerId         String?
+  debitAmount           Decimal   @default(0.00) @db.Decimal(15, 2) // Inward cash
+  creditAmount          Decimal   @default(0.00) @db.Decimal(15, 2) // Outward cash
+  runningBalance        Decimal   @default(0.00) @db.Decimal(15, 2)
+  expenseCategory       String?   // TEA_REFRESHMENT, COURIER, LOCAL_TRAVEL, STATIONERY
+  narration             String
+  accountingVoucherNumber String?
+  createdAt             DateTime  @default(now())
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  cashRegister          CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Cascade)
+
+  @@map("cash_transactions")
+}
+
+model CashClosingSession {
+  id                    String    @id @default(uuid())
+  companyId             String
+  cashRegisterId        String
+  closingNumber         String    @unique // e.g. CCLS/2026/0001
+  cashierName           String
+  shiftDate             DateTime  @default(now())
+  openingCash           Decimal   @db.Decimal(15, 2)
+  totalCashIn           Decimal   @db.Decimal(15, 2)
+  totalCashOut          Decimal   @db.Decimal(15, 2)
+  systemExpectedCash    Decimal   @db.Decimal(15, 2)
+  physicalCountedCash   Decimal   @db.Decimal(15, 2)
+  discrepancy           Decimal   @default(0.00) @db.Decimal(15, 2) // physical - system
+  discrepancyReason     String?
+  status                String    @default("CLOSED") // CLOSED, RECONCILED
+  notes                 String?
+  createdAt             DateTime  @default(now())
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  cashRegister          CashRegister @relation(fields: [cashRegisterId], references: [id], onDelete: Cascade)
+
+  @@map("cash_closing_sessions")
+}
+
+model BankReconciliationRecord {
+  id                    String    @id @default(uuid())
+  companyId             String
+  bankAccountId         String
+  statementPeriod       String    // e.g. "October 2026"
+  asOfDate              DateTime
+  bookBalance           Decimal   @db.Decimal(15, 2)
+  unpresentedCheques    Decimal   @default(0.00) @db.Decimal(15, 2) // Cheques issued not presented (+)
+  uncreditedCheques     Decimal   @default(0.00) @db.Decimal(15, 2) // Cheques deposited not credited (-)
+  directBankDebits      Decimal   @default(0.00) @db.Decimal(15, 2) // Bank charges (-)
+  directBankCredits     Decimal   @default(0.00) @db.Decimal(15, 2) // Direct transfers (+)
+  reconciledBalance     Decimal   @db.Decimal(15, 2)
+  bankStatementBalance  Decimal   @db.Decimal(15, 2)
+  difference            Decimal   @default(0.00) @db.Decimal(15, 2)
+  isBalanced            Boolean   @default(true)
+  notes                 String?
+  createdAt             DateTime  @default(now())
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bankAccount           BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+
+  @@map("bank_reconciliation_records")
+}
+
+// ----------------------------------------------------
+// PHASE 14: EXPENSES, FIXED ASSETS & BUDGETING
+// ----------------------------------------------------
+
+model ExpenseCategory {
+  id               String             @id @default(uuid())
+  companyId        String
+  code             String             @unique
+  name             String
+  description      String?
+  defaultLedgerId  String             @default("led_admin_exp")
+  status           String             @default("ACTIVE")
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  company          Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  vouchers         ExpenseVoucher[]
+  recurringExpenses RecurringExpense[]
+
+  @@map("expense_categories")
+}
+
+model ExpenseVoucher {
+  id                     String          @id @default(uuid())
+  companyId              String
+  voucherNumber          String          @unique
+  categoryId             String
+  categoryName           String?
+  date                   DateTime        @default(now())
+  amount                 Decimal         @db.Decimal(15, 2)
+  taxAmount              Decimal         @default(0.00) @db.Decimal(15, 2)
+  totalAmount            Decimal         @db.Decimal(15, 2)
+  paymentMethod          String          @default("BANK_TRANSFER")
+  vendorName             String?
+  vendorAccountId        String?
+  branchId               String?
+  branchName             String?
+  department             String?
+  projectId              String?
+  status                 String          @default("APPROVED")
+  approvalThreshold      Decimal         @default(50000.00) @db.Decimal(15, 2)
+  approvedBy             String?
+  accountingVoucherNumber String?
+  notes                  String?
+  attachments            Json?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  company                Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category               ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@map("expense_vouchers")
+}
+
+model EmployeeReimbursement {
+  id                     String    @id @default(uuid())
+  companyId              String
+  claimNumber            String    @unique
+  employeeId             String
+  employeeName           String
+  department             String
+  claimDate              DateTime  @default(now())
+  purpose                String
+  amount                 Decimal   @db.Decimal(15, 2)
+  status                 String    @default("SUBMITTED")
+  approvedBy             String?
+  approvalDate           DateTime?
+  paidDate               DateTime?
+  accountingVoucherNumber String?
+  notes                  String?
+  attachments            Json?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  company                Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("employee_reimbursements")
+}
+
+model RecurringExpense {
+  id                 String          @id @default(uuid())
+  companyId          String
+  title              String
+  categoryId         String
+  categoryName       String?
+  amount             Decimal         @db.Decimal(15, 2)
+  frequency          String          @default("MONTHLY")
+  startDate          DateTime
+  nextDueDate        DateTime
+  vendorName         String?
+  department         String?
+  branchId           String?
+  autoPost           Boolean         @default(true)
+  status             String          @default("ACTIVE")
+  lastGeneratedDate  DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  company            Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  category           ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@map("recurring_expenses")
+}
+
+model FixedAsset {
+  id                     String                      @id @default(uuid())
+  companyId              String
+  assetCode              String                      @unique
+  assetName              String
+  category               String                      @default("PLANT_AND_MACHINERY")
+  purchaseDate           DateTime
+  purchaseValue          Decimal                     @db.Decimal(15, 2)
+  salvageValue           Decimal                     @default(0.00) @db.Decimal(15, 2)
+  usefulLifeYears        Int                         @default(5)
+  depreciationMethod     String                      @default("SLM")
+  depreciationRate       Decimal                     @default(10.00) @db.Decimal(5, 2)
+  accumulatedDepreciation Decimal                    @default(0.00) @db.Decimal(15, 2)
+  netBookValue           Decimal                     @db.Decimal(15, 2)
+  location               String
+  branchId               String?
+  branchName             String?
+  status                 String                      @default("ACTIVE")
+  disposalDate           DateTime?
+  disposalValue          Decimal?                    @db.Decimal(15, 2)
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
+
+  company                Company                     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  depreciationSchedules  AssetDepreciationSchedule[]
+  disposals              AssetDisposalRecord[]
+
+  @@map("fixed_assets")
+}
+
+model AssetDepreciationSchedule {
+  id                     String     @id @default(uuid())
+  companyId              String
+  assetId                String
+  financialYear          String
+  periodName             String
+  depreciationDate       DateTime
+  depreciationMethod     String
+  openingBookValue       Decimal    @db.Decimal(15, 2)
+  depreciationAmount     Decimal    @db.Decimal(15, 2)
+  closingBookValue       Decimal    @db.Decimal(15, 2)
+  accountingVoucherNumber String?
+  createdAt              DateTime   @default(now())
+
+  company                Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  asset                  FixedAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("asset_depreciation_schedules")
+}
+
+model AssetDisposalRecord {
+  id                     String     @id @default(uuid())
+  companyId              String
+  assetId                String
+  disposalDate           DateTime
+  disposalType           String     @default("SALE")
+  originalCost           Decimal    @db.Decimal(15, 2)
+  accumulatedDepreciation Decimal   @db.Decimal(15, 2)
+  netBookValue           Decimal    @db.Decimal(15, 2)
+  realizedAmount         Decimal    @db.Decimal(15, 2)
+  gainLossAmount         Decimal    @db.Decimal(15, 2)
+  buyerName              String?
+  accountingVoucherNumber String?
+  notes                  String?
+  createdAt              DateTime   @default(now())
+
+  company                Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  asset                  FixedAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@map("asset_disposal_records")
+}
+
+model BudgetPlan {
+  id                    String    @id @default(uuid())
+  companyId             String
+  budgetCode            String    @unique
+  financialYear         String
+  title                 String
+  budgetType            String    @default("EXPENSE")
+  department            String
+  branchId              String?
+  totalAllocatedExpense Decimal   @default(0.00) @db.Decimal(15, 2)
+  totalAllocatedRevenue Decimal   @default(0.00) @db.Decimal(15, 2)
+  actualExpenseIncurred Decimal   @default(0.00) @db.Decimal(15, 2)
+  actualRevenueRealized Decimal   @default(0.00) @db.Decimal(15, 2)
+  varianceAmount        Decimal   @default(0.00) @db.Decimal(15, 2)
+  variancePercentage    Decimal   @default(0.00) @db.Decimal(5, 2)
+  status                String    @default("APPROVED")
+  approvedBy            String?
+  notes                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  company               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("budget_plans")
+}
+
+// ----------------------------------------------------
+// PHASE 15: RETURNS & FINANCIAL ADJUSTMENTS
+// ----------------------------------------------------
+
+model DistributorReturnRecord {
+  id                     String    @id @default(uuid())
+  companyId              String
+  returnNumber           String    @unique
+  distributorId          String
+  distributorName        String
+  returnType             String    @default("UNSOLD_RETURN")
+  returnDate             DateTime  @default(now())
+  warehouseId            String?
+  warehouseName          String?
+  targetLocation         String    @default("WAREHOUSE")
+  items                  Json
+  totalQuantity          Int
+  totalAmount            Decimal   @db.Decimal(15, 2)
+  creditNoteNumber       String?
+  status                 String    @default("APPROVED")
+  approvedBy             String?
+  accountingVoucherNumber String?
+  notes                  String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  company                Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("distributor_returns")
+}
+
+model FinancialAdjustmentRecord {
+  id                      String    @id @default(uuid())
+  companyId               String
+  adjustmentNumber        String    @unique
+  partyType               String
+  partyId                 String
+  partyName               String
+  adjustmentType          String
+  referenceDocumentType   String?
+  referenceDocumentNumber String?
+  date                    DateTime  @default(now())
+  taxableAmount           Decimal   @db.Decimal(15, 2)
+  gstAmount               Decimal   @default(0.00) @db.Decimal(15, 2)
+  totalAdjustmentAmount   Decimal   @db.Decimal(15, 2)
+  reason                  String
+  approvalThreshold       Decimal   @default(25000.00) @db.Decimal(15, 2)
+  status                  String    @default("APPROVED")
+  approvedBy              String?
+  voucherType             String    @default("CREDIT_NOTE")
+  accountingVoucherNumber String?
+  notes                   String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  company                 Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("financial_adjustments")
+}
+
+model RefundRecord {
+  id                      String    @id @default(uuid())
+  companyId               String
+  refundNumber            String    @unique
+  refundType              String
+  partyId                 String
+  partyName               String
+  referenceCreditDebitNote String?
+  refundDate              DateTime  @default(now())
+  amount                  Decimal   @db.Decimal(15, 2)
+  paymentMethod           String    @default("BANK_TRANSFER")
+  bankLedgerId            String    @default("led_bank_hdfc")
+  status                  String    @default("CONFIRMED")
+  accountingVoucherNumber String?
+  notes                   String?
+  createdAt               DateTime  @default(now())
+
+  company                 Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("refund_records")
+}
+
+
+
+
+
+
+
