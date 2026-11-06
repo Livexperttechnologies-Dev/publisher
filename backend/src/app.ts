@@ -10,11 +10,13 @@ import { ENV } from './config/env';
 
 const app = express();
 
+const allowedOrigins = ENV.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean);
+
 // Security and utility middleware
 app.use(helmet());
 app.use(
   cors({
-    origin: [ENV.CORS_ORIGIN, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: ENV.CORS_ORIGIN === '*' ? true : [...allowedOrigins, 'http://localhost:5173', 'http://127.0.0.1:5173'],
     credentials: true,
   })
 );

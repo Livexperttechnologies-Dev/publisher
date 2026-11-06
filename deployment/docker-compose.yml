@@ -1,55 +1,76 @@
-version: '3.8'
-
 services:
   # ============================================================================
-  # 1. Reverse Proxy & SSL Termination (Nginx)
+  # 1. ERP Frontend Service (React + Vite SPA on Nginx)
   # ============================================================================
-  reverse-proxy:
-    image: nginx:1.25-alpine
-    container_name: kibo360-proxy
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./ssl:/etc/ssl/kibo360:ro
-      - frontend-dist:/var/www/kibo360/html:ro
-      - /var/log/nginx:/var/log/nginx
+  frontend:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+        VITE_APP_TITLE: ${VITE_APP_TITLE:-KIBO360 – Financial Accounting for Publishers & Book Sellers}
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://backend:5000}
+    expose:
+      - "80"
     depends_on:
       backend:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     networks:
       - kibo360-network
 
   # ============================================================================
-  # 2. Production API Server (Node.js Express + TypeScript)
+  # 2. Marketing Static Website Service (Root HTML/CSS/JS on Nginx)
+  # ============================================================================
+  marketing:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.marketing
+    restart: unless-stopped
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - kibo360-network
+
+  # ============================================================================
+  # 3. Production API Server (Node.js Express + TypeScript)
   # ============================================================================
   backend:
     build:
       context: ..
       dockerfile: deployment/Dockerfile.backend
-    container_name: kibo360-api
-    restart: always
+    restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 5000
-      DATABASE_URL: postgresql://${DB_USER:-kibo_admin}:${DB_PASSWORD:-SecretProdP@ss2026}@postgres:5432/${DB_NAME:-kibo360_prod}?sslmode=prefer
-      REDIS_URL: redis://redis:6379
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${DB_USER:-kibo_admin}:${DB_PASSWORD:-SecretProdP@ss2026}@postgres:5432/${DB_NAME:-kibo360_prod}?sslmode=prefer}
+      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD:-SecretRedisP@ss2026}@redis:6379}
       JWT_SECRET: ${JWT_SECRET:-kibo360_enterprise_prod_jwt_secret_2026}
-      JWT_EXPIRES_IN: 15m
-      REFRESH_TOKEN_EXPIRES_IN: 7d
-      CORS_ORIGIN: https://${APP_DOMAIN:-erp.kibo360.com}
-    ports:
-      - "5000:5000"
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      REFRESH_TOKEN_EXPIRES_IN: ${REFRESH_TOKEN_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    expose:
+      - "5000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/api/v1/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5000/api/v1/health"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -58,12 +79,11 @@ services:
       - kibo360-network
 
   # ============================================================================
-  # 3. Primary Production Database (PostgreSQL 16)
+  # 4. Primary Production Database (PostgreSQL 16)
   # ============================================================================
   postgres:
     image: postgres:16-alpine
-    container_name: kibo360-postgres
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-kibo360_prod}
       POSTGRES_USER: ${DB_USER:-kibo_admin}
@@ -72,8 +92,8 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ../database/migrations:/docker-entrypoint-initdb.d:ro
-    ports:
-      - "127.0.0.1:5432:5432"
+    expose:
+      - "5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kibo_admin} -d ${DB_NAME:-kibo360_prod}"]
       interval: 10s
@@ -83,17 +103,16 @@ services:
       - kibo360-network
 
   # ============================================================================
-  # 4. In-Memory Cache & Session Store (Redis 7)
+  # 5. In-Memory Cache & Session Store (Redis 7)
   # ============================================================================
   redis:
     image: redis:7.2-alpine
-    container_name: kibo360-redis
-    restart: always
+    restart: unless-stopped
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-SecretRedisP@ss2026}
     volumes:
       - redisdata:/data
-    ports:
-      - "127.0.0.1:6379:6379"
+    expose:
+      - "6379"
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-SecretRedisP@ss2026}", "ping"]
       interval: 10s
@@ -106,8 +125,6 @@ volumes:
   pgdata:
     driver: local
   redisdata:
-    driver: local
-  frontend-dist:
     driver: local
 
 networks:

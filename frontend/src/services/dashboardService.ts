@@ -126,7 +126,7 @@ export async function fetchLiveDashboardMetrics(filters?: Partial<DashboardFilte
     if (filters?.branchId && filters.branchId !== 'ALL') params.append('branchId', filters.branchId);
     if (filters?.period) params.append('period', filters.period);
 
-    const res = await fetch(`/api/v1/reports/executive-dashboard?${params.toString()}`, {
+    const res = await fetch(`${((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')}/reports/executive-dashboard?${params.toString()}`, {
       headers: {
         'Content-Type': 'application/json',
         ...getAuthHeader(),

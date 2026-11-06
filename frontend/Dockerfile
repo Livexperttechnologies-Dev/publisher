@@ -1,0 +1,43 @@
+# ==============================================================================
+# Multi-Stage Production Dockerfile for KIBO360 Frontend SPA (./frontend Context)
+# ==============================================================================
+
+# Stage 1: Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+ARG VITE_API_BASE_URL=/api/v1
+ARG VITE_APP_TITLE="KIBO360 – Financial Accounting for Publishers & Book Sellers"
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV VITE_APP_TITLE=${VITE_APP_TITLE}
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . ./
+RUN npm run build
+
+# Stage 2: Nginx Web Server for High-Performance Static Serving
+FROM nginx:1.25-alpine
+
+WORKDIR /usr/share/nginx/html
+
+ENV BACKEND_URL=http://backend:5000
+ENV NGINX_ENVSUBST_FILTER=^BACKEND_URL$
+
+# Remove default nginx HTML and config
+RUN rm -rf ./* /etc/nginx/conf.d/default.conf
+
+# Copy built artifacts from builder stage
+COPY --from=builder /app/dist .
+
+# Copy custom nginx template for SPA routing & optional API proxying
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+EXPOSE 80
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:80/health || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

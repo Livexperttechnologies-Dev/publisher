@@ -1,0 +1,132 @@
+services:
+  # ============================================================================
+  # 1. ERP Frontend Service (React + Vite SPA on Nginx)
+  # ============================================================================
+  frontend:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+        VITE_APP_TITLE: ${VITE_APP_TITLE:-KIBO360 – Financial Accounting for Publishers & Book Sellers}
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://backend:5000}
+    expose:
+      - "80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - kibo360-network
+
+  # ============================================================================
+  # 2. Marketing Static Website Service (Root HTML/CSS/JS on Nginx)
+  # ============================================================================
+  marketing:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile.marketing
+    restart: unless-stopped
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - kibo360-network
+
+  # ============================================================================
+  # 3. Production API Server (Node.js Express + TypeScript)
+  # ============================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile.backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${DB_USER:-kibo_admin}:${DB_PASSWORD:-SecretProdP@ss2026}@postgres:5432/${DB_NAME:-kibo360_prod}?sslmode=prefer}
+      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD:-SecretRedisP@ss2026}@redis:6379}
+      JWT_SECRET: ${JWT_SECRET:-kibo360_enterprise_prod_jwt_secret_2026}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      REFRESH_TOKEN_EXPIRES_IN: ${REFRESH_TOKEN_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    expose:
+      - "5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - kibo360-network
+
+  # ============================================================================
+  # 4. Primary Production Database (PostgreSQL 16)
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-kibo360_prod}
+      POSTGRES_USER: ${DB_USER:-kibo_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-SecretProdP@ss2026}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kibo_admin} -d ${DB_NAME:-kibo360_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kibo360-network
+
+  # ============================================================================
+  # 5. In-Memory Cache & Session Store (Redis 7)
+  # ============================================================================
+  redis:
+    image: redis:7.2-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-SecretRedisP@ss2026}
+    volumes:
+      - redisdata:/data
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-SecretRedisP@ss2026}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kibo360-network
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+
+networks:
+  kibo360-network:
+    driver: bridge

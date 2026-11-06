@@ -83,7 +83,7 @@ export const RolesPage: React.FC = () => {
     try {
       const active = updatedRoles.find((r) => r.id === selectedRoleId);
       if (active) {
-        fetch(`/api/v1/roles/${active.id}`, {
+        fetch(`${((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')}/roles/${active.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -358,7 +358,7 @@ export const RolesPage: React.FC = () => {
     saveStoredUsers(updatedUsers);
 
     // Call backend assignment API
-    fetch(`/api/v1/roles/${selectedRole.id}/assign-user`, {
+    fetch(`${((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '')}/roles/${selectedRole.id}/assign-user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: selectedUserToAssign }),

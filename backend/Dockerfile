@@ -1,0 +1,51 @@
+# ==============================================================================
+# Multi-Stage Production Dockerfile for KIBO360 Backend API (./backend Context)
+# ==============================================================================
+
+# Stage 1: Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install build dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy backend source, prisma schema, and tsconfig
+COPY . ./
+
+# Generate Prisma client and compile TypeScript
+RUN npx prisma generate && npm run build
+
+# Stage 2: Minimal Production Runtime
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=5000
+
+# Install dumb-init, wget/curl for healthchecks, and openssl for Prisma
+RUN apk add --no-cache dumb-init wget curl openssl
+
+# Copy production package specifications and install only production dependencies
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Copy generated Prisma client and compiled code from builder stage
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/dist ./dist
+
+# Create non-root system user for security
+RUN addgroup -S kibo && adduser -S kibo -G kibo && chown -R kibo:kibo /app
+
+USER kibo
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:5000/api/v1/health || exit 1
+
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["node", "dist/server.js"]
