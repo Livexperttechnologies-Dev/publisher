@@ -23,12 +23,16 @@ interface HeaderProps {
   collapsed: boolean;
   pageTitle?: string;
   setMobileOpen?: (open: boolean) => void;
+  sidebarWidth?: number;
+  isResizing?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   collapsed,
   pageTitle = 'Financial Accounting Overview',
   setMobileOpen,
+  sidebarWidth,
+  isResizing = false,
 }) => {
   const navigate = useNavigate();
   const { brand } = useBrand();
@@ -95,10 +99,25 @@ export const Header: React.FC<HeaderProps> = ({
     },
   ];
 
+  const [isDesktop, setIsDesktop] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
+  );
+
+  useEffect(() => {
+    const onResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const effectiveLeft = sidebarWidth ?? (collapsed ? 80 : 256);
+
   return (
     <header
-      className={`fixed top-0 right-0 z-20 h-16 bg-white/95 backdrop-blur-sm border-b border-slate-200 transition-all duration-300 ease-in-out flex items-center justify-between px-4 sm:px-6 left-0 ${
-        collapsed ? 'lg:left-20' : 'lg:left-64'
+      style={{
+        left: isDesktop ? `${effectiveLeft}px` : '0px',
+      }}
+      className={`fixed top-0 right-0 z-20 h-16 bg-white/95 backdrop-blur-sm border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 ${
+        isResizing ? '' : 'transition-all duration-300 ease-in-out'
       }`}
     >
       {/* Left: Mobile Menu Button & Page Title */}
