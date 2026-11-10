@@ -36,6 +36,30 @@ const queryClient = new QueryClient({
   },
 });
 
+const getRolePath = (): string => {
+  try {
+    const raw = localStorage.getItem('kibo360_auth');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const role: string = parsed?.user?.role || parsed?.user?.roleType || '';
+      if (role) {
+        const normalized = role.trim().toLowerCase();
+        if (
+          normalized === 'super_admin' ||
+          normalized === 'super administrator' ||
+          normalized === 'admin'
+        ) {
+          return '/admin';
+        }
+        return '/' + (normalized.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'user');
+      }
+    }
+  } catch {}
+  return '/admin';
+};
+
+const RoleRedirect: React.FC = () => <Navigate to={getRolePath()} replace />;
+
 export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -46,7 +70,8 @@ export const App: React.FC = () => {
 
             {/* Protected Application Shell */}
             <Route path="/" element={<AppLayout />}>
-              <Route index element={<DashboardPage />} />
+              <Route index element={<RoleRedirect />} />
+              <Route path=":role" element={<DashboardPage />} />
               <Route path="accounts" element={<ChartOfAccountsPage />} />
               <Route path="vouchers" element={<VouchersPage />} />
               <Route path="catalogue" element={<CataloguePage />} />
@@ -71,7 +96,7 @@ export const App: React.FC = () => {
               <Route path="roles" element={<RolesPage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<RoleRedirect />} />
             </Route>
           </Routes>
         </BrowserRouter>
