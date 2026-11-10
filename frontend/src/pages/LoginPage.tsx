@@ -184,19 +184,19 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#F8FAFC] select-none overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#F8FAFC] select-none overflow-x-hidden lg:overflow-hidden">
       <style>{`
         @keyframes kiboFloatA {
           0%, 100% { transform: translateY(0px) translateX(0px); }
-          50% { transform: translateY(-12px) translateX(3px); }
+          50% { transform: translateY(-10px) translateX(3px); }
         }
         @keyframes kiboFloatB {
           0%, 100% { transform: translateY(0px) translateX(0px); }
-          50% { transform: translateY(-14px) translateX(-3px); }
+          50% { transform: translateY(-12px) translateX(-3px); }
         }
         @keyframes kiboFloatC {
           0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-10px) scale(1.015); }
+          50% { transform: translateY(-8px) scale(1.012); }
         }
         @keyframes kiboTrendDraw {
           0% { stroke-dashoffset: 1200; opacity: 0.45; }
@@ -211,11 +211,11 @@ export const LoginPage: React.FC = () => {
           50% { transform: scaleY(1.18); opacity: 0.75; }
         }
         @keyframes kiboWordIn {
-          0% { opacity: 0; transform: translateY(12px) scale(0.98); filter: blur(3px); }
+          0% { opacity: 0; transform: translateY(10px) scale(0.98); filter: blur(3px); }
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         @keyframes kiboTickerIn {
-          0% { opacity: 0; transform: translateY(6px); }
+          0% { opacity: 0; transform: translateY(5px); }
           100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes kiboRingSpin {
@@ -225,7 +225,7 @@ export const LoginPage: React.FC = () => {
         }
         @keyframes kiboOrbDrift {
           0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(24px, -18px) scale(1.08); }
+          50% { transform: translate(20px, -15px) scale(1.06); }
         }
         @keyframes kiboCardShimmer {
           0% { transform: translateX(-120%); }
@@ -271,10 +271,10 @@ export const LoginPage: React.FC = () => {
       `}</style>
 
       {/* =================================================================== */}
-      {/* LEFT PANEL: Deep Plum Enterprise Showcase (Matches Reference Theme) */}
+      {/* LEFT PANEL: Deep Plum Enterprise Showcase (Responsive for all screens) */}
       {/* =================================================================== */}
       <div
-        className="relative hidden lg:flex lg:w-[62%] xl:w-[64%] flex-col justify-between p-10 xl:p-14 text-white overflow-hidden"
+        className="relative hidden lg:flex lg:w-[58%] xl:w-[62%] 2xl:w-[64%] flex-col justify-between p-6 lg:p-7 xl:p-10 2xl:p-12 text-white overflow-hidden"
         style={{
           background:
             'radial-gradient(circle at 14% 12%, #3D105E 0%, #1F0B33 38%, #150922 72%, #11071B 100%)',
@@ -291,39 +291,38 @@ export const LoginPage: React.FC = () => {
 
         {/* Animated Ambient Glowing Orbs */}
         <div
-          className="kibo-orb-anim pointer-events-none absolute -top-16 left-10 w-80 h-80 rounded-full blur-3xl opacity-25"
+          className="kibo-orb-anim pointer-events-none absolute -top-16 left-10 w-72 xl:w-80 h-72 xl:h-80 rounded-full blur-3xl opacity-25"
           style={{
             background: 'radial-gradient(circle, #7B1FA2 0%, transparent 70%)',
           }}
         />
         <div
-          className="kibo-orb-anim pointer-events-none absolute -bottom-24 left-[28%] w-[32rem] h-[22rem] rounded-full blur-3xl opacity-35"
+          className="kibo-orb-anim pointer-events-none absolute -bottom-24 left-[28%] w-[26rem] xl:w-[32rem] h-[18rem] xl:h-[22rem] rounded-full blur-3xl opacity-35"
           style={{
             background: 'radial-gradient(circle, #8B1E5B 0%, #521042 45%, transparent 75%)',
           }}
         />
 
-        {/* Top Official KIBO360 White Brand Logo (Exact Reference Size: 46px height / ~112px width) */}
-        <div className="relative z-10 flex items-center">
+        {/* Top Official KIBO360 White Brand Logo */}
+        <div className="relative z-10 flex items-center shrink-0">
           <img
             src="/kibo360-logo-white.png"
             alt="KIBO360 - One Platform. Every Business."
-            style={{ height: '65px', width: 'auto' }}
-            className="object-contain"
+            className="h-10 lg:h-12 xl:h-14 2xl:h-16 w-auto object-contain"
           />
         </div>
 
         {/* Center Hero Copy & Publishing Financial ERP Animation Canvas */}
-        <div className="relative z-10 my-auto pt-4 w-full">
+        <div className="relative z-10 my-auto py-2 xl:py-4 w-full">
           {/* Pill Badge */}
           <div
-            className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-white/10 backdrop-blur-md mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md mb-3 xl:mb-5"
             style={{ backgroundColor: 'rgba(46, 26, 66, 0.75)' }}
           >
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-gradient-to-r from-[#E91E63] to-[#F06A64] text-white">
+            <span className="px-2 py-0.5 rounded-full text-[9px] xl:text-[10px] font-extrabold uppercase tracking-wider bg-gradient-to-r from-[#E91E63] to-[#F06A64] text-white">
               ERP
             </span>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-purple-100/90">
+            <span className="text-[10px] xl:text-[11px] font-semibold uppercase tracking-[0.16em] text-purple-100/90">
               Publishing &amp; Financial Accounting
             </span>
             <span className="relative flex h-2 w-2">
@@ -333,7 +332,7 @@ export const LoginPage: React.FC = () => {
           </div>
 
           {/* Main Animated Headline */}
-          <h1 className="text-4xl xl:text-[52px] font-extrabold tracking-tight leading-[1.12] text-white">
+          <h1 className="text-2xl lg:text-3xl xl:text-4xl 2xl:text-[50px] font-extrabold tracking-tight leading-[1.14] text-white">
             One platform for
             <br />
             <span
@@ -345,16 +344,16 @@ export const LoginPage: React.FC = () => {
           </h1>
 
           {/* Subtitle */}
-          <p className="mt-4 max-w-xl text-sm xl:text-[15px] text-slate-300/85 leading-relaxed font-normal">
+          <p className="mt-2.5 xl:mt-3.5 max-w-xl text-xs lg:text-xs xl:text-sm 2xl:text-[15px] text-slate-300/85 leading-relaxed font-normal">
             Streamline general ledgers, ISBN inventory, author royalties, and GST invoicing in one
             unified enterprise platform built for modern publishers.
           </p>
 
           {/* Full-Width Project-Specific Financial & Publishing ERP Animated Canvas */}
-          <div className="relative mt-10 h-64 xl:h-72 w-full">
+          <div className="relative mt-6 lg:mt-7 xl:mt-8 2xl:mt-10 h-52 lg:h-56 xl:h-64 2xl:h-72 w-full">
             {/* Animated Financial Revenue Growth Curve, Secondary Flow & Ledger Volume Bars */}
             <svg
-              className="absolute inset-x-0 top-1/2 -translate-y-1/2 w-full h-44 pointer-events-none"
+              className="absolute inset-x-0 top-1/2 -translate-y-1/2 w-full h-36 xl:h-44 pointer-events-none"
               viewBox="0 0 1000 150"
               fill="none"
               preserveAspectRatio="none"
@@ -478,10 +477,10 @@ export const LoginPage: React.FC = () => {
 
             {/* Card 1: Top-Left - Live Rotating ISBN Print & Dispatch Feed */}
             <div
-              className="kibo-float-a kibo-shimmer relative overflow-hidden absolute left-0 top-2 w-56 rounded-2xl border border-white/10 backdrop-blur-md p-4 shadow-2xl"
+              className="kibo-float-a kibo-shimmer overflow-hidden absolute left-0 top-1 w-44 lg:w-48 xl:w-52 2xl:w-56 rounded-xl xl:rounded-2xl border border-white/10 backdrop-blur-md p-3 xl:p-4 shadow-2xl"
               style={{ backgroundColor: 'rgba(38, 24, 54, 0.82)' }}
             >
-              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-300/70">
+              <div className="flex items-center justify-between text-[9px] xl:text-[10px] font-bold uppercase tracking-wider text-slate-300/70">
                 <span>Now Dispatching</span>
                 <span className="inline-flex items-center gap-1 text-emerald-400 capitalize font-semibold">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
@@ -490,15 +489,15 @@ export const LoginPage: React.FC = () => {
                 </span>
               </div>
               <div key={feedIndex} className="kibo-ticker-anim">
-                <div className="mt-1.5 text-2xl font-extrabold tracking-tight text-white">
+                <div className="mt-1 text-lg xl:text-2xl font-extrabold tracking-tight text-white">
                   {LIVE_DISPATCH_FEED[feedIndex].code}
                 </div>
-                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-300/75">
-                  <BookOpen size={12} className="text-[#F06A64]" />
-                  <span>{LIVE_DISPATCH_FEED[feedIndex].detail}</span>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[10px] xl:text-[11px] text-slate-300/75 truncate">
+                  <BookOpen size={11} className="text-[#F06A64] shrink-0" />
+                  <span className="truncate">{LIVE_DISPATCH_FEED[feedIndex].detail}</span>
                 </div>
               </div>
-              <div className="mt-2.5 h-1 w-full rounded-full bg-white/10 overflow-hidden">
+              <div className="mt-2 h-1 w-full rounded-full bg-white/10 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-[#E91E63] to-[#F06A64] transition-all duration-700"
                   style={{ width: `${LIVE_DISPATCH_FEED[feedIndex].progress}%` }}
@@ -506,13 +505,13 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 2: Top-Center - YTD Publishing Revenue Target Ring */}
+            {/* Card 2: Top-Center / Top-Right on lg - YTD Publishing Revenue Target Ring */}
             <div
-              className="kibo-float-b kibo-shimmer overflow-hidden absolute left-[35%] top-0 w-52 rounded-2xl border border-white/10 backdrop-blur-md p-3.5 shadow-2xl flex items-center gap-3.5"
+              className="kibo-float-b kibo-shimmer overflow-hidden absolute right-0 lg:right-2 xl:right-auto xl:left-[34%] 2xl:left-[35%] top-0 w-40 lg:w-44 xl:w-48 2xl:w-52 rounded-xl xl:rounded-2xl border border-white/10 backdrop-blur-md p-2.5 xl:p-3.5 shadow-2xl flex items-center gap-2.5 xl:gap-3.5"
               style={{ backgroundColor: 'rgba(42, 26, 58, 0.84)' }}
             >
-              <div className="relative h-12 w-12 flex items-center justify-center shrink-0">
-                <svg className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
+              <div className="relative h-10 w-10 xl:h-12 xl:w-12 flex items-center justify-center shrink-0">
+                <svg className="h-10 w-10 xl:h-12 xl:w-12 -rotate-90" viewBox="0 0 36 36">
                   <circle
                     cx="18"
                     cy="18"
@@ -537,150 +536,150 @@ export const LoginPage: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-extrabold text-white leading-none">80%</span>
-                  <span className="text-[10px] font-bold text-emerald-400">+14.8%</span>
+                  <span className="text-lg xl:text-xl font-extrabold text-white leading-none">80%</span>
+                  <span className="text-[9px] xl:text-[10px] font-bold text-emerald-400">+14.8%</span>
                 </div>
-                <div className="mt-1 text-[11px] text-slate-300/75">Revenue target</div>
+                <div className="mt-0.5 text-[10px] xl:text-[11px] text-slate-300/75">Revenue target</div>
               </div>
             </div>
 
-            {/* Card 3: Top-Right - Live Author Royalty Accrual & TDS 194J */}
+            {/* Card 3: Top-Right (Active on xl & 2xl screens: laptops & desktops) */}
             <div
-              className="kibo-float-d kibo-shimmer overflow-hidden absolute right-0 top-2 w-60 rounded-2xl border border-white/10 backdrop-blur-md p-4 shadow-2xl"
+              className="kibo-float-d kibo-shimmer overflow-hidden absolute hidden xl:block right-0 top-1 w-48 xl:w-52 2xl:w-60 rounded-xl xl:rounded-2xl border border-white/10 backdrop-blur-md p-3 xl:p-4 shadow-2xl"
               style={{ backgroundColor: 'rgba(40, 24, 58, 0.82)' }}
             >
-              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-300/70">
+              <div className="flex items-center justify-between text-[9px] xl:text-[10px] font-bold uppercase tracking-wider text-slate-300/70">
                 <span>Author Royalties</span>
                 <span className="text-[#F06A64] font-semibold">TDS 194J</span>
               </div>
               <div key={feedIndex} className="kibo-ticker-anim">
-                <div className="mt-1.5 text-xl font-extrabold tracking-tight text-white">
+                <div className="mt-1 text-base xl:text-xl font-extrabold tracking-tight text-white">
                   {LIVE_ROYALTY_FEED[feedIndex].amount}
                 </div>
-                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-300/75">
-                  <Feather size={12} className="text-[#E91E63]" />
-                  <span>{LIVE_ROYALTY_FEED[feedIndex].sub}</span>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[10px] xl:text-[11px] text-slate-300/75 truncate">
+                  <Feather size={11} className="text-[#E91E63] shrink-0" />
+                  <span className="truncate">{LIVE_ROYALTY_FEED[feedIndex].sub}</span>
                 </div>
               </div>
             </div>
 
             {/* Card 4: Bottom-Left - Double-Entry Trial Balance Sync */}
             <div
-              className="kibo-float-c kibo-shimmer overflow-hidden absolute left-4 bottom-1 w-64 rounded-2xl border border-white/10 backdrop-blur-md px-4 py-3 shadow-2xl flex items-center justify-between"
+              className="kibo-float-c kibo-shimmer overflow-hidden absolute left-0 xl:left-2 bottom-1 w-48 lg:w-52 xl:w-56 2xl:w-64 rounded-xl xl:rounded-2xl border border-white/10 backdrop-blur-md px-3 py-2 xl:px-4 xl:py-3 shadow-2xl flex items-center justify-between"
               style={{ backgroundColor: 'rgba(38, 24, 54, 0.82)' }}
             >
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-white/10 flex items-center justify-center text-purple-200">
-                  <Layers size={15} />
+              <div className="flex items-center gap-2.5 xl:gap-3 truncate">
+                <div className="h-7 w-7 xl:h-8 xl:w-8 rounded-lg xl:rounded-xl bg-white/10 flex items-center justify-center text-purple-200 shrink-0">
+                  <Layers size={14} />
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-white">Trial balance reconciled</div>
-                  <div className="text-[11px] text-slate-300/65">Dr = Cr · General ledger synced</div>
+                <div className="truncate">
+                  <div className="text-[11px] xl:text-xs font-bold text-white truncate">Trial balance synced</div>
+                  <div className="text-[9px] xl:text-[11px] text-slate-300/65 truncate">Dr = Cr · General ledger</div>
                 </div>
               </div>
-              <CheckCircle2 size={16} className="text-emerald-400 shrink-0 animate-pulse" />
+              <CheckCircle2 size={15} className="text-emerald-400 shrink-0 animate-pulse ml-1" />
             </div>
 
-            {/* Card 5: Bottom-Center - Live Incoming Voucher & Sales Receipt */}
+            {/* Card 5: Bottom-Center / Bottom-Right on lg - Live Incoming Voucher & Sales Receipt */}
             <div
-              className="kibo-float-a kibo-shimmer overflow-hidden absolute left-[38%] bottom-3 w-60 rounded-2xl border border-white/10 backdrop-blur-md px-4 py-3 shadow-2xl flex items-center gap-3"
+              className="kibo-float-a kibo-shimmer overflow-hidden absolute right-0 lg:right-2 xl:right-auto xl:left-[35%] 2xl:left-[38%] bottom-2 w-44 lg:w-48 xl:w-52 2xl:w-60 rounded-xl xl:rounded-2xl border border-white/10 backdrop-blur-md px-3 py-2 xl:px-4 xl:py-3 shadow-2xl flex items-center gap-2.5 xl:gap-3"
               style={{ backgroundColor: 'rgba(44, 26, 60, 0.84)' }}
             >
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#F06A64] to-[#E91E63] flex items-center justify-center text-white shadow-md shrink-0">
-                <IndianRupee size={16} />
+              <div className="h-7 w-7 xl:h-9 xl:w-9 rounded-lg xl:rounded-xl bg-gradient-to-br from-[#F06A64] to-[#E91E63] flex items-center justify-center text-white shadow-md shrink-0">
+                <IndianRupee size={14} />
               </div>
               <div key={feedIndex} className="kibo-ticker-anim truncate">
-                <div className="text-xs font-bold text-white">
+                <div className="text-[11px] xl:text-xs font-bold text-white truncate">
                   {LIVE_RECEIPT_FEED[feedIndex].amount}
                 </div>
-                <div className="text-[11px] text-slate-300/65 truncate">
+                <div className="text-[9px] xl:text-[11px] text-slate-300/65 truncate">
                   {LIVE_RECEIPT_FEED[feedIndex].meta}
                 </div>
               </div>
             </div>
 
-            {/* Card 6: Bottom-Right - GST e-Invoice & e-Way Bill */}
+            {/* Card 6: Bottom-Right (Active on xl & 2xl screens: laptops & desktops) */}
             <div
-              className="kibo-float-b kibo-shimmer overflow-hidden absolute right-2 bottom-1 w-56 rounded-2xl border border-white/10 backdrop-blur-md px-4 py-3 shadow-2xl flex items-center justify-between"
+              className="kibo-float-b kibo-shimmer overflow-hidden absolute hidden xl:flex right-0 xl:right-2 bottom-1 w-48 xl:w-52 2xl:w-56 rounded-xl xl:rounded-2xl border border-white/10 backdrop-blur-md px-3 py-2 xl:px-4 xl:py-3 shadow-2xl items-center justify-between"
               style={{ backgroundColor: 'rgba(38, 24, 54, 0.82)' }}
             >
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400">
-                  <FileCheck2 size={15} />
+              <div className="flex items-center gap-2.5 xl:gap-3 truncate">
+                <div className="h-7 w-7 xl:h-8 xl:w-8 rounded-lg xl:rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-400 shrink-0">
+                  <FileCheck2 size={14} />
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-white">GST e-Invoice Verified</div>
-                  <div className="text-[11px] text-slate-300/65">HSN 4901 · IRN Generated</div>
+                <div className="truncate">
+                  <div className="text-[11px] xl:text-xs font-bold text-white truncate">GST e-Invoice Verified</div>
+                  <div className="text-[9px] xl:text-[11px] text-slate-300/65 truncate">HSN 4901 · IRN OK</div>
                 </div>
               </div>
-              <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+              <CheckCircle2 size={14} className="text-emerald-400 shrink-0 ml-1" />
             </div>
           </div>
         </div>
 
         {/* Bottom Feature Strip */}
-        <div className="relative z-10 flex items-center gap-6 text-xs text-slate-300/65 pt-4">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={14} className="text-slate-300/80" />
+        <div className="relative z-10 flex flex-wrap items-center gap-3.5 xl:gap-6 text-[11px] xl:text-xs text-slate-300/65 pt-2 xl:pt-4 shrink-0">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck size={13} className="text-slate-300/80 shrink-0" />
             <span>Role-based access</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Activity size={14} className="text-slate-300/80" />
+          <div className="flex items-center gap-1.5">
+            <Activity size={13} className="text-slate-300/80 shrink-0" />
             <span>GST &amp; Double-Entry Integrated</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Smartphone size={14} className="text-slate-300/80" />
+          <div className="flex items-center gap-1.5">
+            <Smartphone size={13} className="text-slate-300/80 shrink-0" />
             <span>Works on any device</span>
           </div>
         </div>
       </div>
 
       {/* =================================================================== */}
-      {/* RIGHT PANEL: Elevated White Background Card Sign-In Form            */}
+      {/* RIGHT PANEL: Elevated White Card Sign-In Form (Fully Responsive)     */}
       {/* =================================================================== */}
-      <div className="flex-1 flex flex-col justify-between px-6 py-8 sm:px-10 lg:px-12 bg-[#F8FAFC]">
-        {/* Mobile Logo Header (only visible on small screens) */}
-        <div className="lg:hidden flex items-center justify-between">
+      <div className="flex-1 flex flex-col justify-between p-4 sm:p-6 lg:p-8 xl:p-10 bg-[#F8FAFC] overflow-y-auto min-h-screen lg:min-h-0">
+        {/* Mobile Logo Header (only visible on small screens < 1024px) */}
+        <div className="lg:hidden flex items-center justify-between pb-3">
           <img
             src="/kibo360-logo.png"
             alt="KIBO360 Logo"
-            className="h-9 w-auto object-contain"
+            className="h-8 sm:h-9 w-auto object-contain"
           />
           <span className="text-[11px] font-semibold text-[#690BA8]">Publishing ERP</span>
         </div>
-        <div className="hidden lg:block" />
+        <div className="hidden lg:block shrink-0" />
 
         {/* Elevated White Card Container */}
-        <div className="w-full max-w-md mx-auto my-auto">
-          <div className="bg-white py-8 px-6 shadow-xl shadow-purple-950/5 rounded-2xl border border-slate-200/80 sm:px-10">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Sign in</h2>
+        <div className="w-full max-w-sm sm:max-w-md mx-auto my-auto py-2">
+          <div className="bg-white py-6 sm:py-7 xl:py-8 px-5 sm:px-8 xl:px-10 shadow-xl shadow-purple-950/5 rounded-2xl border border-slate-200/80">
+            <div className="mb-4 sm:mb-5">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Sign in</h2>
               <p className="mt-1 text-xs text-slate-500">
                 Use the email and password for your publisher account.
               </p>
             </div>
 
             {authError && (
-              <div className="mb-4 p-3 rounded-lg bg-pink-50 border border-pink-200 text-[#E91E63] text-xs flex items-center gap-2">
+              <div className="mb-3.5 p-2.5 sm:p-3 rounded-lg bg-pink-50 border border-pink-200 text-[#E91E63] text-xs flex items-center gap-2">
                 <AlertCircle size={15} className="shrink-0" />
                 <span>{authError}</span>
               </div>
             )}
 
-            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+            <form className="space-y-3.5 sm:space-y-4" onSubmit={handleSubmit(onSubmit)} autoComplete="off">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
                   Corporate Email Address
                 </label>
                 <div className="relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Mail size={16} />
+                    <Mail size={15} />
                   </div>
                   <input
                     type="email"
                     autoComplete="off"
                     {...register('email')}
-                    className="block w-full pl-10 pr-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#690BA8] focus:ring-1 focus:ring-[#690BA8] transition-all"
+                    className="block w-full pl-9 pr-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#690BA8] focus:ring-1 focus:ring-[#690BA8] transition-all"
                     placeholder="name@company.com"
                   />
                 </div>
@@ -688,18 +687,18 @@ export const LoginPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
                   Password
                 </label>
                 <div className="relative rounded-lg shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Lock size={16} />
+                    <Lock size={15} />
                   </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="new-password"
                     {...register('password')}
-                    className="block w-full pl-10 pr-10 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#690BA8] focus:ring-1 focus:ring-[#690BA8] transition-all"
+                    className="block w-full pl-9 pr-9 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#690BA8] focus:ring-1 focus:ring-[#690BA8] transition-all"
                     placeholder="••••••••"
                   />
                   <button
@@ -709,42 +708,43 @@ export const LoginPage: React.FC = () => {
                     tabIndex={-1}
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
                 {errors.password && <p className="mt-1 text-xs text-[#E91E63]">{errors.password.message}</p>}
-                <div className="mt-1.5 flex justify-end">
+                {/* Forgot password link temporarily commented out */}
+                {/* <div className="mt-1 flex justify-end">
                   <a href="#forgot" className="text-xs text-[#690BA8] font-semibold hover:underline">
                     Forgot password?
                   </a>
-                </div>
+                </div> */}
               </div>
 
               {/* Security CAPTCHA Verification */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
                   Security Verification (CAPTCHA)
                 </label>
                 <div className="flex items-center gap-2">
                   <div
-                    className="flex-1 flex items-center justify-between px-3.5 py-2 rounded-lg bg-slate-100 border border-slate-200 select-none"
+                    className="flex-1 min-w-0 flex items-center justify-between px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-slate-100 border border-slate-200 select-none"
                     aria-label="CAPTCHA code"
                   >
-                    <span className="font-mono text-base font-bold tracking-[0.35em] text-[#340771] italic line-through decoration-slate-400/60">
+                    <span className="font-mono text-sm sm:text-base font-bold tracking-[0.25em] sm:tracking-[0.35em] text-[#340771] italic line-through decoration-slate-400/60 truncate">
                       {captchaCode}
                     </span>
                     <button
                       type="button"
                       onClick={refreshCaptcha}
-                      className="p-1 rounded-md text-slate-500 hover:text-[#690BA8] hover:bg-slate-200/70 transition-colors"
+                      className="p-1 rounded-md text-slate-500 hover:text-[#690BA8] hover:bg-slate-200/70 transition-colors shrink-0 ml-1"
                       title="Refresh CAPTCHA"
                     >
-                      <RefreshCw size={15} />
+                      <RefreshCw size={14} />
                     </button>
                   </div>
-                  <div className="relative flex-1">
+                  <div className="relative flex-1 min-w-0">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <ShieldCheck size={16} />
+                      <ShieldCheck size={15} />
                     </div>
                     <input
                       type="text"
@@ -756,14 +756,14 @@ export const LoginPage: React.FC = () => {
                       maxLength={6}
                       autoComplete="off"
                       placeholder="Enter code"
-                      className="block w-full pl-9 pr-3 py-2 text-sm font-mono uppercase bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#690BA8] focus:ring-1 focus:ring-[#690BA8] transition-all"
+                      className="block w-full pl-8 sm:pl-9 pr-2.5 py-1.5 sm:py-2 text-sm font-mono uppercase bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#690BA8] focus:ring-1 focus:ring-[#690BA8] transition-all"
                     />
                   </div>
                 </div>
                 {captchaError && <p className="mt-1 text-xs text-[#E91E63]">{captchaError}</p>}
               </div>
 
-              <div className="pt-2">
+              <div className="pt-1.5 sm:pt-2">
                 <Button
                   type="submit"
                   variant="primary"
@@ -780,7 +780,7 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Bottom Copyright & Security Badge */}
-        <div className="w-full flex items-center justify-between text-[11px] text-slate-400 pt-4 border-t border-slate-200/70">
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2 text-[11px] text-slate-400 pt-3 border-t border-slate-200/70 text-center sm:text-left shrink-0">
           <span>© 2026 KIBO360 · Livexpert Technologies</span>
           <span className="inline-flex items-center gap-1 text-slate-500">
             <Lock size={11} />
